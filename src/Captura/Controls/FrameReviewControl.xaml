@@ -137,7 +137,7 @@
       <TextBlock x:Name="SelectionSummary" Text="" TextWrapping="Wrap" MaxHeight="30" FontSize="11" Opacity="0.75" Margin="0,4,0,8"/>
      </StackPanel>
      <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
-      <Button x:Name="ExportButton" Content="导出所选帧" Click="ExportSelected_Click" Background="#2563EB" Foreground="White" BorderBrush="#2563EB" FontWeight="SemiBold" MinHeight="36" Margin="0,4,0,0" IsEnabled="False"/>
+      <Button x:Name="ExportButton" Content="导出" Click="ExportSelected_Click" Background="#2563EB" Foreground="White" BorderBrush="#2563EB" FontWeight="SemiBold" MinHeight="36" Margin="0,4,0,0" IsEnabled="False"/>
       <Button x:Name="OutputButton" Content="打开导出目录" Click="Output_Click" Visibility="Collapsed" Margin="0,4,0,0"/>
      </StackPanel>
      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
