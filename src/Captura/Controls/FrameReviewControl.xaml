@@ -26,8 +26,8 @@
   </Style>
   <Style TargetType="Button" BasedOn="{StaticResource ReviewButton}"/>
   <Style x:Key="TransportButton" TargetType="Button" BasedOn="{StaticResource ReviewButton}">
-   <Setter Property="Width" Value="36"/><Setter Property="Height" Value="42"/>
-   <Setter Property="Padding" Value="5,3"/><Setter Property="Margin" Value="0,0,3,0"/>
+   <Setter Property="Width" Value="34"/><Setter Property="Height" Value="42"/>
+   <Setter Property="Padding" Value="5,3"/><Setter Property="Margin" Value="0,0,2,0"/>
    <Setter Property="ToolTipService.InitialShowDelay" Value="200"/>
    <Setter Property="ToolTipService.ShowDuration" Value="20000"/>
   </Style>
@@ -40,15 +40,74 @@
  </UserControl.Resources>
  <Grid Margin="12,8">
   <Grid.RowDefinitions>
-   <RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="160"/>
+   <RowDefinition Height="*" MinHeight="160"/>
    <RowDefinition Height="6"/><RowDefinition Height="154" MinHeight="154" MaxHeight="300"/>
    <RowDefinition Height="Auto"/>
   </Grid.RowDefinitions>
-  <DockPanel Margin="0,0,0,10">
-   <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-    <Button Content="打开视频 / GIF" Click="Open_Click" Margin="8,0"/>
-    <Button Content="实时画面" Click="Live_Click"/>
-    <Button x:Name="HelpButton" Click="Help_Click" Margin="8,0,0,0" Padding="6" ToolTip="回看与选帧帮助" AutomationProperties.Name="回看与选帧帮助">
+
+  <Grid Grid.Row="0">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="248"/></Grid.ColumnDefinitions>
+   <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border x:Name="PreviewSurface" Background="#111827" CornerRadius="8" MouseLeftButtonDown="Preview_MouseDown" Focusable="True" ClipToBounds="True">
+     <Grid Margin="6">
+      <MediaElement x:Name="Player" LoadedBehavior="Manual" UnloadedBehavior="Manual" ScrubbingEnabled="True"
+                    MediaOpened="Player_Opened" MediaEnded="Player_Ended" MediaFailed="Player_Failed"/>
+      <Image x:Name="Still" Stretch="Uniform"/>
+      <StackPanel x:Name="EmptyPanel" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360">
+       <TextBlock Text="将视频或 GIF 拖到这里" Foreground="White" FontSize="20" HorizontalAlignment="Center"/>
+       <TextBlock x:Name="EmptyHint" Text="也可点击右上方打开文件，或完成一次录制" Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12"/>
+      </StackPanel>
+     </Grid>
+    </Border>
+    <StackPanel Grid.Row="1" Margin="0,8,0,0">
+     <Slider x:Name="Timeline" Minimum="0" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；查看位置不会清除已选帧" Margin="0,0,0,6"/>
+     <DockPanel LastChildFill="True">
+      <CheckBox x:Name="FrameMode" Content="逐帧" Checked="Mode_Changed" Unchecked="Mode_Changed" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0" ToolTip="开启：左右键逐帧；关闭：左右键按 1 秒移动"/>
+      <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+       <Button Style="{StaticResource TransportButton}" Click="First_Click" ToolTip="第一帧" AutomationProperties.Name="第一帧">
+        <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-skip-previous}"/>
+       </Button>
+       <Button Style="{StaticResource TransportButton}" Click="BackFive_Click" ToolTip="前5秒" AutomationProperties.Name="前5秒">
+        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-rewind}"/><TextBlock Text="5秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
+       </Button>
+       <Button Style="{StaticResource TransportButton}" Click="BackOne_Click" ToolTip="前1秒" AutomationProperties.Name="前1秒">
+        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-rewind}"/><TextBlock Text="1秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
+       </Button>
+       <Button Style="{StaticResource TransportButton}" Click="Previous_Click" ToolTip="上一帧" AutomationProperties.Name="上一帧">
+        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-step-backward}"/><TextBlock Text="1帧" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
+       </Button>
+       <Button x:Name="PlayButton" Style="{StaticResource TransportButton}" Click="Play_Click" ToolTip="播放（空格）" AutomationProperties.Name="播放">
+        <Path x:Name="PlayGlyph" Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-play}"/>
+       </Button>
+       <Button Style="{StaticResource TransportButton}" Click="Next_Click" ToolTip="下一帧" AutomationProperties.Name="下一帧">
+        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-step-forward}"/><TextBlock Text="1帧" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
+       </Button>
+       <Button Style="{StaticResource TransportButton}" Click="ForwardOne_Click" ToolTip="后1秒" AutomationProperties.Name="后1秒">
+        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-fast-forward}"/><TextBlock Text="1秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
+       </Button>
+       <Button Style="{StaticResource TransportButton}" Click="ForwardFive_Click" ToolTip="后5秒" AutomationProperties.Name="后5秒">
+        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-fast-forward}"/><TextBlock Text="5秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
+       </Button>
+       <Button Style="{StaticResource TransportButton}" Click="Last_Click" ToolTip="最后一帧" AutomationProperties.Name="最后一帧">
+        <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-skip-next}"/>
+       </Button>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0" ToolTip="帧号；当前时间 / 总时间">
+       <TextBlock x:Name="FrameNumberLabel" Text="0 / 0 帧" FontSize="10"/>
+       <TextBlock Text=" · " FontSize="10" Opacity="0.6"/>
+       <TextBlock x:Name="PositionLabel" Text="00:00:00.000 / 00:00:00.000" FontSize="10"/>
+      </StackPanel>
+     </DockPanel>
+    </StackPanel>
+   </Grid>
+   <Border Grid.Column="2" Background="#0D64748B" BorderBrush="#2864748B" BorderThickness="1" CornerRadius="8" Padding="14">
+    <DockPanel LastChildFill="True">
+     <StackPanel DockPanel.Dock="Top">
+   <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+    <Button Content="打开视频 / GIF" Click="Open_Click" FontSize="11" Padding="5,4" MinHeight="28"/>
+    <Button Content="实时画面" Click="Live_Click" FontSize="11" Padding="5,4" MinHeight="28" Margin="4,0,0,0"/>
+    <Button x:Name="HelpButton" Click="Help_Click" Margin="4,0,0,0" Padding="3" MinHeight="28" Width="28" ToolTip="回看与选帧帮助" AutomationProperties.Name="回看与选帧帮助">
      <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-help-circle-outline}"/>
     </Button>
     <Popup x:Name="ReviewHelp" PlacementTarget="{Binding ElementName=HelpButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
@@ -66,69 +125,7 @@
      </Border>
     </Popup>
    </StackPanel>
-   <TextBlock x:Name="FileLabel" Text="录制完成自动载入，也可拖入视频或 GIF" TextTrimming="CharacterEllipsis" FontSize="12" Opacity="0.7" VerticalAlignment="Center"/>
-  </DockPanel>
-  <Grid Grid.Row="1">
-   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="248"/></Grid.ColumnDefinitions>
-   <Grid>
-    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <Border x:Name="PreviewSurface" Background="#111827" CornerRadius="8" MouseLeftButtonDown="Preview_MouseDown" Focusable="True" ClipToBounds="True">
-     <Grid Margin="6">
-      <MediaElement x:Name="Player" LoadedBehavior="Manual" UnloadedBehavior="Manual" ScrubbingEnabled="True"
-                    MediaOpened="Player_Opened" MediaEnded="Player_Ended" MediaFailed="Player_Failed"/>
-      <Image x:Name="Still" Stretch="Uniform"/>
-      <StackPanel x:Name="EmptyPanel" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360">
-       <TextBlock Text="将视频或 GIF 拖到这里" Foreground="White" FontSize="20" HorizontalAlignment="Center"/>
-       <TextBlock x:Name="EmptyHint" Text="也可点击右上方打开文件，或完成一次录制" Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12"/>
-      </StackPanel>
-     </Grid>
-    </Border>
-    <StackPanel Grid.Row="1" Margin="0,8,0,0">
-     <Grid Margin="0,0,0,6">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-      <StackPanel VerticalAlignment="Center" ToolTip="帧号；当前时间 / 总时间">
-       <TextBlock x:Name="FrameNumberLabel" Text="0 / 0 帧" FontSize="11"/>
-       <TextBlock x:Name="PositionLabel" Text="00:00:00.000 / 00:00:00.000" FontSize="11" Margin="0,2,0,0"/>
-      </StackPanel>
-      <Slider Grid.Column="1" x:Name="Timeline" Minimum="0" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；查看位置不会清除已选帧" VerticalAlignment="Center" Margin="12,0,0,0"/>
-     </Grid>
-     <DockPanel LastChildFill="True">
-      <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-       <Button Style="{StaticResource TransportButton}" Click="First_Click" ToolTip="第一帧" AutomationProperties.Name="第一帧">
-        <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-skip-previous}"/>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="BackFive_Click" ToolTip="前5秒" AutomationProperties.Name="前5秒">
-        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-rewind}"/><TextBlock Text="5秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="BackOne_Click" ToolTip="前1秒" AutomationProperties.Name="前1秒">
-        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-rewind}"/><TextBlock Text="1秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="Previous_Click" ToolTip="上一帧" AutomationProperties.Name="上一帧">
-        <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-step-backward}"/>
-       </Button>
-       <Button x:Name="PlayButton" Style="{StaticResource TransportButton}" Click="Play_Click" ToolTip="播放（空格）" AutomationProperties.Name="播放">
-        <Path x:Name="PlayGlyph" Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-play}"/>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="Next_Click" ToolTip="下一帧" AutomationProperties.Name="下一帧">
-        <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-step-forward}"/>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="ForwardOne_Click" ToolTip="后1秒" AutomationProperties.Name="后1秒">
-        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-fast-forward}"/><TextBlock Text="1秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="ForwardFive_Click" ToolTip="后5秒" AutomationProperties.Name="后5秒">
-        <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-fast-forward}"/><TextBlock Text="5秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="Last_Click" ToolTip="最后一帧" AutomationProperties.Name="最后一帧">
-        <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-skip-next}"/>
-       </Button>
-      </StackPanel>
-      <CheckBox x:Name="FrameMode" Content="逐帧模式" Checked="Mode_Changed" Unchecked="Mode_Changed" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="8,0" ToolTip="开启：左右键逐帧；关闭：左右键按 1 秒移动"/>
-     </DockPanel>
-    </StackPanel>
-   </Grid>
-   <Border Grid.Column="2" Background="#0D64748B" BorderBrush="#2864748B" BorderThickness="1" CornerRadius="8" Padding="14">
-    <DockPanel LastChildFill="True">
-     <StackPanel DockPanel.Dock="Top">
+   <TextBlock x:Name="FileLabel" Text="未打开媒体" TextTrimming="CharacterEllipsis" FontSize="12" Opacity="0.7" Margin="0,0,0,10"/>
       <TextBlock Text="导出选中帧" FontSize="16" FontWeight="SemiBold"/>
       <DockPanel Margin="0,8,0,0">
        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
@@ -175,8 +172,8 @@
     </DockPanel>
    </Border>
   </Grid>
-  <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#2864748B"/>
-  <Grid Grid.Row="3" Margin="0,6,0,0">
+  <GridSplitter Grid.Row="1" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#2864748B"/>
+  <Grid Grid.Row="2" Margin="0,6,0,0">
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
    <DockPanel Margin="0,0,0,6">
     <TextBlock Text="帧时间轴" FontWeight="SemiBold"/>
@@ -231,7 +228,7 @@
     </ListBox.ItemTemplate>
    </ListBox>
   </Grid>
-  <Grid Grid.Row="4" Margin="0,8,0,0">
+  <Grid Grid.Row="3" Margin="0,8,0,0">
    <Grid.Style><Style TargetType="Grid"><Style.Triggers>
     <MultiDataTrigger><MultiDataTrigger.Conditions>
      <Condition Binding="{Binding Text, ElementName=Status}" Value=""/>
