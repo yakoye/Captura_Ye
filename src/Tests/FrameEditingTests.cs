@@ -99,6 +99,23 @@ namespace Captura.Tests
             Assert.Throws<ArgumentException>(() => FrameSimilarity.Percent(new byte[0], new byte[0]));
         }
         static string FFmpegPath => FFmpegService.DetectExecutable() ?? throw new InvalidOperationException("测试需要 FFmpeg。");
+        [Fact]
+        public async Task FFmpegProgressiveTrimmedMp4IgnoresDiscardedPrerollPackets()
+        {
+            var directory = Path.Combine(Path.GetTempPath(), "captura-trim-index-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
+            try {
+                var source = Path.Combine(directory, "source.mp4"); var file = Path.Combine(directory, "trimmed.mp4");
+                await FrameReviewService.RunBytesAsync(FFmpegPath, "-v error -f lavfi -i testsrc2=s=64x48:r=24:d=5 -c:v libx264 -g 120 -bf 3 " + FrameReviewService.Quote(source), CancellationToken.None);
+                await FrameReviewService.RunBytesAsync(FFmpegPath, "-v error -ss 2.3 -i " + FrameReviewService.Quote(source) + " -t 1 -c copy " + FrameReviewService.Quote(file), CancellationToken.None);
+                var service = new FrameReviewService(FFmpegPath); var initial = await service.OpenInitialAsync(file, CancellationToken.None);
+                Assert.True(initial.IsApproximate);
+                var exact = await service.CompleteIndexAsync(initial, CancellationToken.None);
+                var canonical = await service.OpenAsync(file, CancellationToken.None);
+                Assert.True(exact.Times.Length < initial.Times.Length);
+                Assert.Equal(canonical.Times, exact.Times); Assert.Equal(canonical.Duration, exact.Duration, 5);
+                Assert.Equal(await service.ReadFrameAsync(canonical, 0, CancellationToken.None), await service.ReadFrameAsync(exact, 0, CancellationToken.None));
+            } finally { Directory.Delete(directory, true); }
+        }
         [Theory]
         [InlineData(true)]
         [InlineData(false)]

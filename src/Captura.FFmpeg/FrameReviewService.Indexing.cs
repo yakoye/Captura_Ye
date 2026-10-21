@@ -46,31 +46,34 @@ namespace Captura.FFmpeg
         public async Task<ReviewMedia> CompleteIndexAsync(ReviewMedia initial, CancellationToken token, IProgress<int> progress = null)
         {
             if (!initial.IsApproximate) return initial;
-            var packetCodecs = new[] { "h264", "hevc", "vp8", "vp9", "mpeg4", "mjpeg", "rawvideo", "ffv1", "huffyuv", "png", "qtrle", "prores" };
+            var packetCodecs = new[] { "h264", "hevc", "mpeg4", "mjpeg", "rawvideo", "ffv1", "huffyuv", "png", "qtrle", "prores" };
             if (_ffprobe == null || !packetCodecs.Contains(initial.Codec)) return await OpenAsync(initial.FilePath, token);
             try {
                 return await Task.Run(async () => {
-                    using var process = new Process { StartInfo = new ProcessStartInfo(_ffprobe, "-v error -select_streams v:0 -show_packets -show_entries packet=pts_time,duration_time -of compact=p=0:nk=0 " + Quote(initial.FilePath)) {
+                    using var process = new Process { StartInfo = new ProcessStartInfo(_ffprobe, "-v error -select_streams v:0 -show_packets -show_entries packet=pts_time,duration_time,flags -of compact=p=0:nk=0 " + Quote(initial.FilePath)) {
                         UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true } };
                     process.Start();
                     using var cancel = token.Register(() => { try { if (!process.HasExited) process.Kill(); } catch (InvalidOperationException) { } });
                     var error = process.StandardError.ReadToEndAsync();
-                    var points = new List<Tuple<double, double>>(); var clock = Stopwatch.StartNew();
+                    var points = new List<Tuple<double, double>>(); var clock = Stopwatch.StartNew(); var needsDecode = false;
                     string line;
                     while ((line = await process.StandardOutput.ReadLineAsync()) != null) {
                         token.ThrowIfCancellationRequested(); double? time = null; double length = 0;
                         foreach (var field in line.Split('|')) {
                             var pair = field.Split(new[] { '=' }, 2);
+                            if (pair.Length == 2 && pair[0] == "flags" && pair[1].Contains("D")) needsDecode = true;
                             if (pair.Length != 2 || !double.TryParse(pair[1], NumberStyles.Float, Invariant, out var value) || double.IsNaN(value) || double.IsInfinity(value)) continue;
                             if (pair[0] == "pts_time") time = value;
                             if (pair[0] == "duration_time") length = value;
                         }
-                        if (time.HasValue) points.Add(Tuple.Create(time.Value, length));
+                        if (time.HasValue) { points.Add(Tuple.Create(time.Value, length)); if (time.Value < 0) needsDecode = true; }
+                        else if (!string.IsNullOrWhiteSpace(line)) needsDecode = true;
                         if (points.Count == 1 || clock.ElapsedMilliseconds >= 150) { progress?.Report(points.Count); clock.Restart(); }
                     }
                     var details = await error; await Task.Run(() => process.WaitForExit()); token.ThrowIfCancellationRequested();
-                    if (process.ExitCode != 0 || points.Count == 0 || (initial.ExpectedFrames > 0 && initial.ExpectedFrames != points.Count)) throw new IOException("数据包索引需要进一步校验。" + details);
+                    if (process.ExitCode != 0 || needsDecode || points.Count == 0 || (initial.ExpectedFrames > 0 && initial.ExpectedFrames != points.Count)) throw new IOException("数据包索引需要进一步校验。" + details);
                     var sorted = points.OrderBy(p => p.Item1).ToArray(); var start = sorted[0].Item1;
+                    for (var i = 1; i < sorted.Length; i++) if (sorted[i].Item1 <= sorted[i - 1].Item1) throw new IOException("时间戳需要逐帧校验。");
                     var times = sorted.Select(p => p.Item1 - start).ToArray();
                     var last = sorted.Last().Item2;
                     if (last <= 0) last = times.Length > 1 ? times.Last() - times[times.Length - 2] : initial.Duration;

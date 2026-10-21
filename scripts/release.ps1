@@ -128,7 +128,7 @@ try {
         $frameTests = '(FullyQualifiedName~FrameReviewTests|FullyQualifiedName~FrameEditingTests)'
         if (!(Get-Command ffmpeg.exe -ErrorAction SilentlyContinue)) {
             $frameTests = '((FullyQualifiedName~FrameReviewTests&FullyQualifiedName!~ExactFramePreviewMatchesBatchPngAndCompositions&FullyQualifiedName!~LargeSelectionCrossesBatchBoundaryWithoutLosingFrames&FullyQualifiedName!~RunningDecoderCanBeCancelled)|(FullyQualifiedName~FrameEditingTests&FullyQualifiedName!~FFmpeg))'
-            Write-Host '系统 PATH 未找到 FFmpeg：跳过 19 项媒体集成测试，仍运行 19 项帧逻辑测试。'
+            Write-Host '系统 PATH 未找到 FFmpeg：跳过 20 项媒体集成测试，仍运行 19 项帧逻辑测试。'
         }
         $testFilter = 'FullyQualifiedName~PropertyStoreTests|FullyQualifiedName~RecorderTests|FullyQualifiedName~AudioFileWriterTests|FullyQualifiedName~ImageProviderTests|FullyQualifiedName~ReleaseBehaviorTests|' + $frameTests
         Run 'dotnet' @('test','src\Tests\Tests.csproj','-c','Release','--filter',$testFilter,'--logger',"trx;LogFileName=core.trx",'--results-directory',$logRoot,'-v','minimal')
