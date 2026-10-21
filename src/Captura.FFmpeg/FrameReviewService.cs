@@ -16,6 +16,10 @@ namespace Captura.FFmpeg
         public string FilePath { get; set; }
         public double[] Times { get; set; }
         public double Duration { get; set; }
+        internal int PixelWidth, PixelHeight;
+        public bool IsApproximate { get; internal set; }
+        internal int ExpectedFrames;
+        internal string Codec;
         public int FrameAt(double seconds)
         {
             var i = Array.BinarySearch(Times, seconds);
@@ -24,10 +28,11 @@ namespace Captura.FFmpeg
     }
 
     // 预览和导出共用源帧索引，避免用平均帧率推算可变帧率视频。
-    public sealed class FrameReviewService
+    public sealed partial class FrameReviewService
     {
         readonly string _ffmpeg;
         readonly string _ffprobe;
+        string _rawSync;
         static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
         public FrameReviewService(string ffmpeg, bool useProbe = true)
@@ -88,6 +93,58 @@ namespace Captura.FFmpeg
             if (index < 0 || index >= media.Times.Length) throw new ArgumentOutOfRangeException(nameof(index));
             var seek = Math.Max(0, media.Times[index] - 0.000001).ToString("0.######", Invariant);
             return RunBytesAsync(_ffmpeg, "-v error -nostdin -ss " + seek + " -i " + Quote(media.FilePath) + " -map 0:v:0 -frames:v 1 -vf \"scale=144:90:force_original_aspect_ratio=decrease\" -f image2pipe -c:v mjpeg -", token);
+        }
+
+        async Task PrepareRawAsync(ReviewMedia media, CancellationToken token)
+        {
+            if (media.PixelWidth == 0) {
+                var bmp = await RunBytesAsync(_ffmpeg, "-v error -nostdin -i " + Quote(media.FilePath) + " -map 0:v:0 -frames:v 1 -c:v bmp -f image2pipe -", token);
+                if (bmp.Length < 54 || bmp[0] != 'B' || bmp[1] != 'M') throw new IOException("无法读取视频画面尺寸。");
+                var width = BitConverter.ToInt32(bmp, 18); var height = Math.Abs(BitConverter.ToInt32(bmp, 22));
+                if (width <= 0 || height <= 0 || (long)width * height * 4 > 256 * 1024 * 1024) throw new IOException("画面尺寸超出帧编辑支持范围。");
+                media.PixelWidth = width; media.PixelHeight = height;
+            }
+            if (_rawSync == null) _rawSync = (await RunAsync(_ffmpeg, "-hide_banner -h full", token)).Contains("-fps_mode") ? " -fps_mode passthrough" : " -vsync 0";
+        }
+        string RawArguments(ReviewMedia media, int source)
+        {
+            var seek = Math.Max(0, media.Times[source] - 0.000001).ToString("0.######", Invariant);
+            return "-v error -nostdin -ss " + seek + " -i " + Quote(media.FilePath) + " -map 0:v:0 -an -sn -dn" + _rawSync + " -pix_fmt bgra -f rawvideo -";
+        }
+        public async Task<FramePlaybackSession> StartPlaybackAsync(ReviewMedia media, int[] sourceFrames, int start, CancellationToken token)
+        {
+            var frames = NormalizeSelection(sourceFrames, media.Times.Length);
+            if (start < 0 || start >= frames.Length) throw new ArgumentOutOfRangeException(nameof(start));
+            await PrepareRawAsync(media, token); token.ThrowIfCancellationRequested();
+            return new FramePlaybackSession(_ffmpeg, RawArguments(media, frames[start]), media.PixelWidth, media.PixelHeight, frames, start, token);
+        }
+        public async Task<int[]> FindDuplicatesAsync(ReviewMedia media, int[] sourceFrames, double similarity, CancellationToken token, IProgress<int> progress = null)
+        {
+            if (double.IsNaN(similarity) || similarity < 0.1 || similarity > 100) throw new ArgumentOutOfRangeException(nameof(similarity));
+            var frames = NormalizeSelection(sourceFrames, media.Times.Length);
+            await PrepareRawAsync(media, token);
+            return await Task.Run(async () => {
+                using var reader = new RawFrameReader(_ffmpeg, RawArguments(media, frames[0]), token);
+                var bytes = checked(media.PixelWidth * media.PixelHeight * 4);
+                var previous = new byte[bytes]; var current = new byte[bytes];
+                var removed = new List<int>(); var position = 0; var source = frames[0]; var reportClock = Stopwatch.StartNew();
+                while (position < frames.Length && await reader.ReadAsync(current)) {
+                    if (source == frames[position]) {
+                        var equal = position > 0;
+                        if (equal && similarity == 100) {
+                            for (var i = 0; i < bytes; i++) if (current[i] != previous[i]) { equal = false; break; }
+                        } else if (equal) equal = FrameSimilarity.Percent(previous, current) >= similarity;
+                        if (equal) removed.Add(position);
+                        else { var swap = previous; previous = current; current = swap; }
+                        position++;
+                        if (position <= 2 || position == frames.Length || reportClock.ElapsedMilliseconds >= 80) { progress?.Report(position); reportClock.Restart(); }
+                    }
+                    source++;
+                }
+                token.ThrowIfCancellationRequested();
+                if (position < frames.Length) throw new IOException("源文件解码帧数与时间轴不一致，未修改时间轴。");
+                return removed.ToArray();
+            }, token);
         }
 
         public static int[] NormalizeSelection(IEnumerable<int> frames, int count)

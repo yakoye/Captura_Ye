@@ -1,4 +1,4 @@
-<UserControl x:Class="Captura.FrameReviewControl"
+﻿<UserControl x:Class="Captura.FrameReviewControl"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  AllowDrop="True" Drop="Media_Drop" PreviewDragOver="Media_DragOver"
@@ -25,7 +25,36 @@
    </ControlTemplate></Setter.Value></Setter>
   </Style>
   <Style TargetType="Button" BasedOn="{StaticResource ReviewButton}"/>
+  <Style x:Key="FrameEditButton" TargetType="Button" BasedOn="{StaticResource ReviewButton}">
+   <Setter Property="FontSize" Value="11"/><Setter Property="MinHeight" Value="24"/>
+   <Setter Property="Padding" Value="6,2"/><Setter Property="Margin" Value="4,0,0,0"/>
+  </Style>
   <Style x:Key="TransportButton" TargetType="Button" BasedOn="{StaticResource ReviewButton}">
+   <Setter Property="Width" Value="34"/><Setter Property="Height" Value="42"/>
+   <Setter Property="Padding" Value="5,3"/><Setter Property="Margin" Value="0,0,2,0"/>
+   <Setter Property="ToolTipService.InitialShowDelay" Value="200"/>
+   <Setter Property="ToolTipService.ShowDuration" Value="20000"/>
+  </Style>
+  <Style x:Key="RepeatReviewButton" TargetType="RepeatButton">
+   <Setter Property="Delay" Value="350"/><Setter Property="Interval" Value="110"/>
+   <Setter Property="Foreground" Value="{DynamicResource ItemText}"/>
+   <Setter Property="Background" Value="{DynamicResource WindowBackground}"/>
+   <Setter Property="BorderBrush" Value="#4064748B"/><Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="Padding" Value="10,5"/><Setter Property="MinHeight" Value="30"/>
+   <Setter Property="Focusable" Value="True"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RepeatButton">
+    <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonBorder" Property="Background" Value="#203B82F6"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="RepeatTransportButton" TargetType="RepeatButton" BasedOn="{StaticResource RepeatReviewButton}">
    <Setter Property="Width" Value="34"/><Setter Property="Height" Value="42"/>
    <Setter Property="Padding" Value="5,3"/><Setter Property="Margin" Value="0,0,2,0"/>
    <Setter Property="ToolTipService.InitialShowDelay" Value="200"/>
@@ -33,7 +62,7 @@
   </Style>
   <Style x:Key="TransportIcon" TargetType="Path">
    <Setter Property="Width" Value="22"/><Setter Property="Height" Value="22"/><Setter Property="Stretch" Value="Uniform"/>
-   <Setter Property="Fill" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+   <Setter Property="Fill" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}"/>
   </Style>
   <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource ItemText}"/></Style>
   </ResourceDictionary>
@@ -41,7 +70,7 @@
  <Grid Margin="12,8">
   <Grid.RowDefinitions>
    <RowDefinition Height="*" MinHeight="160"/>
-   <RowDefinition Height="6"/><RowDefinition Height="154" MinHeight="154" MaxHeight="300"/>
+   <RowDefinition Height="6"/><RowDefinition Height="162" MinHeight="162" MaxHeight="300"/>
    <RowDefinition Height="Auto"/>
   </Grid.RowDefinitions>
 
@@ -63,32 +92,32 @@
     <StackPanel Grid.Row="1" Margin="0,8,0,0">
      <Slider x:Name="Timeline" Minimum="0" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；查看位置不会清除已选帧" Margin="0,0,0,6"/>
      <DockPanel LastChildFill="True">
-      <CheckBox x:Name="FrameMode" Content="逐帧" Checked="Mode_Changed" Unchecked="Mode_Changed" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0" ToolTip="开启：左右键逐帧；关闭：左右键按 1 秒移动"/>
+      <CheckBox x:Name="FrameMode" Content="逐帧" Checked="Mode_Changed" Unchecked="Mode_Changed" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0" ToolTip="开启：左右键逐帧；关闭：左右键沿用最近点击的 1 秒或 5 秒步长"/>
       <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
        <Button Style="{StaticResource TransportButton}" Click="First_Click" ToolTip="第一帧" AutomationProperties.Name="第一帧">
         <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-skip-previous}"/>
        </Button>
-       <Button Style="{StaticResource TransportButton}" Click="BackFive_Click" ToolTip="前5秒" AutomationProperties.Name="前5秒">
+       <RepeatButton Style="{StaticResource RepeatTransportButton}" Click="BackFive_Click" ToolTip="前5秒" AutomationProperties.Name="前5秒">
         <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-rewind}"/><TextBlock Text="5秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="BackOne_Click" ToolTip="前1秒" AutomationProperties.Name="前1秒">
+       </RepeatButton>
+       <RepeatButton Style="{StaticResource RepeatTransportButton}" Click="BackOne_Click" ToolTip="前1秒" AutomationProperties.Name="前1秒">
         <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-rewind}"/><TextBlock Text="1秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="Previous_Click" ToolTip="上一帧" AutomationProperties.Name="上一帧">
+       </RepeatButton>
+       <RepeatButton x:Name="PreviousButton" Style="{StaticResource RepeatTransportButton}" Click="Previous_Click" ToolTip="上一帧" AutomationProperties.Name="上一帧">
         <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-step-backward}"/><TextBlock Text="1帧" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
+       </RepeatButton>
        <Button x:Name="PlayButton" Style="{StaticResource TransportButton}" Click="Play_Click" ToolTip="播放（空格）" AutomationProperties.Name="播放">
         <Path x:Name="PlayGlyph" Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-play}"/>
        </Button>
-       <Button Style="{StaticResource TransportButton}" Click="Next_Click" ToolTip="下一帧" AutomationProperties.Name="下一帧">
+       <RepeatButton x:Name="NextButton" Style="{StaticResource RepeatTransportButton}" Click="Next_Click" ToolTip="下一帧" AutomationProperties.Name="下一帧">
         <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-step-forward}"/><TextBlock Text="1帧" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="ForwardOne_Click" ToolTip="后1秒" AutomationProperties.Name="后1秒">
+       </RepeatButton>
+       <RepeatButton Style="{StaticResource RepeatTransportButton}" Click="ForwardOne_Click" ToolTip="后1秒" AutomationProperties.Name="后1秒">
         <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-fast-forward}"/><TextBlock Text="1秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
-       <Button Style="{StaticResource TransportButton}" Click="ForwardFive_Click" ToolTip="后5秒" AutomationProperties.Name="后5秒">
+       </RepeatButton>
+       <RepeatButton Style="{StaticResource RepeatTransportButton}" Click="ForwardFive_Click" ToolTip="后5秒" AutomationProperties.Name="后5秒">
         <StackPanel><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-fast-forward}"/><TextBlock Text="5秒" FontSize="9" HorizontalAlignment="Center"/></StackPanel>
-       </Button>
+       </RepeatButton>
        <Button Style="{StaticResource TransportButton}" Click="Last_Click" ToolTip="最后一帧" AutomationProperties.Name="最后一帧">
         <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-skip-next}"/>
        </Button>
@@ -112,16 +141,20 @@
     </Button>
     <Popup x:Name="ReviewHelp" PlacementTarget="{Binding ElementName=HelpButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
      <Border Background="{DynamicResource WindowBackground}" BorderBrush="#8064748B" BorderThickness="1" CornerRadius="8" Padding="16" Width="380" Margin="0,6,0,0">
-      <StackPanel>
+      <ScrollViewer MaxHeight="520" VerticalScrollBarVisibility="Auto"><StackPanel>
        <DockPanel Margin="0,0,0,12"><Button Content="关闭" Click="HelpClose_Click" DockPanel.Dock="Right" Padding="6,2"/><TextBlock Text="回看与选帧帮助" FontSize="16" FontWeight="SemiBold"/></DockPanel>
+       <TextBlock Text="长视频先打开预览，精确索引在后台建立；完成前可播放和定位，选帧编辑及导出在索引完成后开放。帧号前的“约”表示临时估算。" TextWrapping="Wrap" Margin="0,0,0,12"/>
        <TextBlock Text="选择帧" FontWeight="SemiBold"/>
        <TextBlock Text="单击缩略图：单选；Ctrl 单击：增减离散帧；Shift 单击：连续选择；Ctrl+Shift 单击：追加连续范围。右上角勾选框直接增减单帧，也支持 Shift 连选。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="播放与定位" FontWeight="SemiBold"/>
-       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。逐帧模式开启时左右键逐帧查看，关闭时左右键按 1 秒移动，Shift+左右键按 5 秒移动。查看与播放不会清除选择。" TextWrapping="Wrap" Margin="0,4,0,12"/>
+       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。左右键沿用最近点击的 1 帧 / 1 秒 / 5 秒按钮步长；六个步进按钮支持按住连续移动。逐帧开关仍可手动切换，Shift+左右键可按 5 秒移动。拖动进度条会持续更新画面。查看与播放不会清除选择。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="快捷键与导出" FontWeight="SemiBold"/>
        <TextBlock Text="预览或时间轴内：空格播放 / 暂停；Ctrl+Enter 增减当前帧；Ctrl+A 全选；Ctrl+Shift+A 清空；Home / End 定位首尾。输入框保留原有键盘行为。" TextWrapping="Wrap" Margin="0,4,0,8"/>
        <TextBlock Text="在右侧选择图片、视频或 GIF，然后导出所选帧。按原时间顺序导出，视频和 GIF 不含音频；完成后可打开导出目录。左上数字是帧号，橙色标记是当前查看，勾选蓝底是导出选择。" TextWrapping="Wrap"/>
-      </StackPanel>
+       <TextBlock Text="帧编辑" FontWeight="SemiBold" Margin="0,12,0,4"/>
+       <TextBlock Text="移除重复作用于整个时间轴，按原尺寸像素比较，100% 须完全相同，保留每组首帧。Delete 删除选中；Ctrl+Z 撤销，Ctrl+Y 重做。删除或减少帧数会缩短时长，操作和撤销后需重新选帧；原文件保留。编辑后视频预览及合成针对画面，不含音频。查看帧尽量固定在第二张，首尾除外。" TextWrapping="Wrap"/>
+
+      </StackPanel></ScrollViewer>
      </Border>
     </Popup>
    </StackPanel>
@@ -134,8 +167,8 @@
       <TextBlock Text="导出选中帧" FontSize="16" FontWeight="SemiBold"/>
       <DockPanel Margin="0,8,0,0">
        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
-        <Button Content="全选" Click="All_Click" Padding="6,2" MinHeight="24" FontSize="11"/>
-        <Button Content="清空" Click="Clear_Click" Padding="6,2" MinHeight="24" FontSize="11" Margin="4,0,0,0"/>
+        <Button x:Name="AllButton" Content="全选" Click="All_Click" Padding="6,2" MinHeight="24" FontSize="11"/>
+        <Button x:Name="ClearButton" Content="清空" Click="Clear_Click" Padding="6,2" MinHeight="24" FontSize="11" Margin="4,0,0,0"/>
        </WrapPanel>
        <TextBlock x:Name="SelectionLabel" Text="已选 0 帧" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
       </DockPanel>
@@ -169,7 +202,7 @@
       <Expander Header="范围选择" Margin="0,12,0,0">
        <StackPanel Margin="0,8,0,0">
         <Button x:Name="RangeStartButton" Content="以当前帧为起点" Click="RangeStart_Click"/>
-        <Button Content="添加到当前帧的范围" Click="RangeEnd_Click" Margin="0,6,0,0"/>
+        <Button x:Name="RangeEndButton" Content="添加到当前帧的范围" Click="RangeEnd_Click" Margin="0,6,0,0"/>
        </StackPanel>
       </Expander>
       </StackPanel>
@@ -182,12 +215,34 @@
   <Grid Grid.Row="2" Margin="0,6,0,0">
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
    <DockPanel Margin="0,0,0,6">
-    <TextBlock Text="帧时间轴" FontWeight="SemiBold"/>
-    <TextBlock Text="橙色标记：当前查看 · 蓝底勾选：导出选择" HorizontalAlignment="Right" FontSize="11" Opacity="0.7"/>
+    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+     <Button x:Name="DeleteFramesButton" Content="删除选中" Click="DeleteFrames_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False" ToolTip="删除所选帧（Delete），至少保留一帧；可撤销"/>
+     <Button x:Name="ReduceFramesButton" Content="减少帧数" Click="ReduceFrames_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False"/>
+     <Button x:Name="UndoEditButton" Content="撤销" Click="UndoEdit_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False" ToolTip="撤销帧编辑（Ctrl+Z）"/>
+     <Button x:Name="RedoEditButton" Content="重做" Click="RedoEdit_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False" ToolTip="重做帧编辑（Ctrl+Y）"/>
+     <Popup x:Name="ReduceFramesPopup" PlacementTarget="{Binding ElementName=ReduceFramesButton}" Placement="Top" StaysOpen="False" AllowsTransparency="True">
+      <Border Background="{DynamicResource WindowBackground}" BorderBrush="#8064748B" BorderThickness="1" CornerRadius="6" Padding="14" Width="290">
+       <StackPanel>
+        <TextBlock Text="减少帧数" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,10"/>
+        <StackPanel Orientation="Horizontal"><TextBlock Text="每" VerticalAlignment="Center"/><TextBox x:Name="ReduceInterval" Text="2" Width="52" Margin="8,0" HorizontalContentAlignment="Right"/><TextBlock Text="帧保留 1 帧" VerticalAlignment="Center"/></StackPanel>
+        <TextBlock x:Name="ReduceHint" Text="作用于整个时间轴，保留每组首帧；可撤销。" TextWrapping="Wrap" FontSize="11" Margin="0,10"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="应用" Click="ReduceApply_Click" Style="{StaticResource FrameEditButton}"/><Button Content="取消" Click="ReduceCancel_Click" Style="{StaticResource FrameEditButton}"/></StackPanel>
+       </StackPanel>
+      </Border>
+     </Popup>
+    </StackPanel>
+    <TextBlock DockPanel.Dock="Left" Text="帧时间轴" FontWeight="SemiBold" VerticalAlignment="Center"/>
+    <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+     <TextBlock Text="移除重复：相似度" FontSize="11" VerticalAlignment="Center"/>
+     <TextBox x:Name="SimilarityInput" Text="100" Width="48" Height="24" FontSize="11" MaxLength="5" Margin="5,0,2,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" ToolTip="0.1—100%；100% 为原尺寸像素完全相同，保留每组首帧"/>
+     <TextBlock Text="%" FontSize="11" VerticalAlignment="Center"/>
+     <Button x:Name="DuplicatesApply" Content="应用" Click="DuplicatesApply_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False"/>
+     <Button x:Name="DuplicatesCancel" Content="取消" Click="DuplicatesCancel_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False"/>
+    </StackPanel>
    </DockPanel>
    <ListBox Grid.Row="1" x:Name="FrameStrip" SelectionMode="Extended" SelectionChanged="FrameStrip_SelectionChanged" IsTextSearchEnabled="False" BorderThickness="0" Background="Transparent"
             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True"
-            VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.CacheLength="1"
+            VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.CacheLength="1" VirtualizingPanel.ScrollUnit="Item"
             PreviewMouseLeftButtonDown="FrameStrip_MouseDown" PreviewMouseWheel="FrameStrip_MouseWheel" ScrollViewer.ScrollChanged="FrameStrip_ScrollChanged">
     <ListBox.Template><ControlTemplate TargetType="ListBox">
      <ScrollViewer Focusable="False" CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0">
@@ -220,7 +275,7 @@
          <TextBlock Text="{Binding Number}" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
         </Border>
         <Border Background="#E6FFFFFF" CornerRadius="3" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="3">
-         <CheckBox IsChecked="{Binding IsSelected, Mode=OneWay}" Click="TileCheck_Click" Margin="0" Foreground="#111827"
+         <CheckBox IsEnabled="{Binding CanSelectFrames, RelativeSource={RelativeSource AncestorType=UserControl}}" IsChecked="{Binding IsSelected, Mode=OneWay}" Click="TileCheck_Click" Margin="0" Foreground="#111827"
                    AutomationProperties.Name="{Binding Number, StringFormat=选择第 {0} 帧}" ToolTip="勾选可增减单帧，并保留其他选择"/>
         </Border>
         <TextBlock Grid.Row="1" Text="{Binding Time}" FontSize="10" Opacity="0.7" Margin="0,6,0,0"/>

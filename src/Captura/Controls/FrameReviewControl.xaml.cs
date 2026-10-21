@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
@@ -42,6 +42,9 @@ namespace Captura
         double _gifStartTime;
         int _index, _rangeStart, _displayedIndex = -1;
         bool _updating, _playing, _disposed, _playerReady;
+        int _secondsStep = 1;
+        Task _frameWorker;
+        int? _frameTarget;
         string _output;
 
         public FrameReviewControl()
@@ -54,17 +57,18 @@ namespace Captura
                 if (!_playing || _media == null) return;
                 if (_gif != null) {
                     var time = _gifStartTime + _gifClock.Elapsed.TotalSeconds;
-                    if (time >= _media.Duration) { Pause(); _index = _media.Times.Length - 1; Step(0); return; }
-                    var index = _media.FrameAt(time);
+                    if (time >= FrameDuration) { Pause(); _index = FrameCount - 1; Step(0); return; }
+                    var index = FrameAt(time);
                     if (index != _displayedIndex) {
-                        try { Still.Source = DecodeBitmap(_gif.ReadFrame(index)); _displayedIndex = index; }
+                        try { Still.Source = DecodeBitmap(_gif.ReadFrame(SourceAt(index))); _displayedIndex = index; }
                         catch (Exception e) { Pause(); Status.Text = "GIF 播放失败：" + e.Message; }
                     }
                     _index = index;
                 }
+                else if (Edited) PresentEditedVideo();
                 else {
                     if (!_playerReady) return;
-                    _index = _media.FrameAt(Player.Position.TotalSeconds);
+                    _index = FrameAt(Player.Position.TotalSeconds);
                 }
                 UpdatePosition();
             };
@@ -73,29 +77,29 @@ namespace Captura
         public async Task OpenMediaAsync(string file)
         {
             if (_disposed) return;
-            if (_export != null) { Status.Text = "请先等待导出结束，或取消处理后打开其他文件。"; return; }
-            if (_selected.Count > 0 && MessageBox.Show("打开其他文件会清空当前选帧，是否继续？", "打开媒体", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-            _load?.Cancel(); _frame?.Cancel(); _thumbnailRequest?.Cancel();
+            if (_export != null || _edit != null) { Status.Text = "请先等待处理结束，或取消后打开其他文件。"; return; }
+            if ((_selected.Count > 0 || Edited) && MessageBox.Show("打开其他文件会清空当前选帧和帧编辑，是否继续？", "打开媒体", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            _indexing?.Cancel(); _load?.Cancel(); _frame?.Cancel(); _thumbnailRequest?.Cancel();
             var load = new CancellationTokenSource();
             _load = load;
             Pause(); Player.Close(); Player.Source = null; Still.Source = null; _cache.Clear();
             _gif?.Dispose(); _gif = null;
-            _media = null; _pendingThumbnailIndices = null; _selection.Reset(0); _markedSelection.Clear(); _tiles.Clear(); _thumbnails.Clear();
+            _media = null; _timeline = null; _timelineRevision++; _pendingThumbnailIndices = null; _selection.Reset(0); _markedSelection.Clear(); _tiles.Clear(); _thumbnails.Clear();
             FrameStrip.ItemsSource = null; _currentTile = -1; RefreshSelection();
             _displayedIndex = -1; _index = _rangeStart = 0;
             FrameMode.IsChecked = false;
             RangeStartButton.Content = "以当前帧为起点";
             FileLabel.Text = Path.GetFileName(file); FileLabel.ToolTip = file;
-            EmptyPanel.Visibility = Visibility.Visible; EmptyHint.Text = "正在读取帧索引……";
+            EmptyPanel.Visibility = Visibility.Visible; EmptyHint.Text = "正在打开媒体……";
             ReviewRequested?.Invoke(); SetBusy(true);
             try
             {
                 var executable = await Task.Run(() => FFmpegService.DetectExecutable(), load.Token);
                 if (executable == null) throw new IOException("未找到 FFmpeg，请到设置中的 FFmpeg 页面自动检测或指定目录。");
                 var service = new FrameReviewService(executable);
-                var media = await service.OpenAsync(file, load.Token);
+                var media = await service.OpenInitialAsync(file, load.Token);
                 load.Token.ThrowIfCancellationRequested();
-                _service = service; _media = media;
+                _service = service; _media = media; _timeline = new FrameTimeline(media.Times, media.Duration);
                 _selection.Reset(media.Times.Length);
                 _tiles = media.Times.Select((time, i) => new FrameTile(i, time)).ToList();
                 FrameStrip.ItemsSource = _tiles;
@@ -111,7 +115,8 @@ namespace Captura
                 EmptyPanel.Visibility = Visibility.Collapsed;
                 ExportFps.Text = Math.Max(1, Math.Min(60, Math.Round(media.Times.Length / media.Duration, 3))).ToString(CultureInfo.InvariantCulture);
                 Status.Text = "";
-                UpdatePosition(); await ShowFrameAsync(); ScheduleThumbnails();
+                UpdatePosition(); _ = ShowFrameAsync(); ScheduleThumbnails();
+                if (media.IsApproximate) _ = CompleteIndexAsync(media);
             }
             catch (OperationCanceledException) { }
             catch (Exception e) { if (!load.IsCancellationRequested) { EmptyPanel.Visibility = Visibility.Visible; EmptyHint.Text = "无法打开媒体，请查看下方提示。"; Status.Text = e.Message; } }
@@ -123,55 +128,71 @@ namespace Captura
             if (_media == null) return;
             _selection.View(_index);
             _updating = true; Timeline.Value = _index; _updating = false;
-            FrameNumberLabel.Text = $"{_index + 1} / {_media.Times.Length} 帧";
-            PositionLabel.Text = $"{TimeSpan.FromSeconds(_media.Times[_index]):hh\\:mm\\:ss\\.fff} / {TimeSpan.FromSeconds(_media.Duration):hh\\:mm\\:ss\\.fff}";
+            FrameNumberLabel.Text = (_media.IsApproximate ? "约 " : "") + $"{_index + 1} / {FrameCount} 帧";
+            PositionLabel.Text = $"{TimeSpan.FromSeconds(FrameTimes[_index]):hh\\:mm\\:ss\\.fff} / {TimeSpan.FromSeconds(FrameDuration):hh\\:mm\\:ss\\.fff}";
             if (_currentTile != _index && _tiles.Count > _index) {
                 if (_currentTile >= 0 && _currentTile < _tiles.Count) _tiles[_currentTile].IsCurrent = false;
                 _tiles[_index].IsCurrent = true; _currentTile = _index;
-                if (_playing) FrameStrip.ScrollIntoView(_tiles[_index]);
+                RevealCurrent();
             }
         }
 
-        async Task ShowFrameAsync()
+        Task ShowFrameAsync()
         {
-            if (_media == null || _playing || _disposed) return;
-            _frame?.Cancel();
+            if (_media == null || _playing || _disposed) return Task.CompletedTask;
+            _frameTarget = _index;
+            if (_cache.TryGetValue(_index, out var cached)) {
+                Still.Source = cached; Still.Visibility = Visibility.Visible; _displayedIndex = _index;
+            } else if (_gif == null && !Edited && _playerReady) {
+                // 系统播放器先提供拖动中的即时画面，后台补上精确解码结果。
+                Player.Position = TimeSpan.FromSeconds(FrameTimes[_index]); Player.Pause(); Still.Visibility = Visibility.Collapsed;
+            }
+            if (_frame != null && !_frame.IsCancellationRequested) return _frameWorker ?? Task.CompletedTask;
             var request = new CancellationTokenSource(); _frame = request;
-            var index = _index; var media = _media;
-            try
-            {
-                // 连按方向键时合并过时请求，且终止对应解码进程。
-                await Task.Delay(25, request.Token);
-                if (!_cache.TryGetValue(index, out var bitmap))
-                {
-                    var bytes = await _service.ReadFrameAsync(media, index, request.Token);
-                    var image = DecodeBitmap(bytes);
-                    bitmap = image;
-                    // 按解码后的图像大小限制缓存，避免 4K 逐帧耗尽内存。
-                    var capacity = Math.Max(2, Math.Min(32, 64 * 1024 * 1024 / Math.Max(1L, (long)image.PixelWidth * image.PixelHeight * 4)));
-                    if (_cache.Count >= capacity) _cache.Remove(_cache.Keys.OrderByDescending(n => Math.Abs(n - index)).First());
-                    _cache[index] = bitmap;
+            return _frameWorker = ReadLatestFrameAsync(request, _media, _timelineRevision);
+        }
+        async Task ReadLatestFrameAsync(CancellationTokenSource request, ReviewMedia media, int revision)
+        {
+            try {
+                // 每次只解码一个请求；持续输入只替换下一目标，避免反复取消造成画面一直不更新。
+                while (_frameTarget.HasValue) {
+                    request.Token.ThrowIfCancellationRequested();
+                    if (_disposed || _playing || _media != media || revision != _timelineRevision) return;
+                    var index = _frameTarget.Value; _frameTarget = null;
+                    if (!_cache.TryGetValue(index, out var bitmap)) {
+                        var bytes = await _service.ReadFrameAsync(media, SourceAt(index), request.Token);
+                        request.Token.ThrowIfCancellationRequested();
+                        if (_media != media || revision != _timelineRevision || _disposed) return;
+                        bitmap = DecodeBitmap(bytes);
+                        var capacity = Math.Max(2, Math.Min(32, 64 * 1024 * 1024 / Math.Max(1L, (long)bitmap.PixelWidth * bitmap.PixelHeight * 4)));
+                        if (_cache.Count >= capacity) _cache.Remove(_cache.Keys.OrderByDescending(n => Math.Abs(n - index)).First());
+                        _cache[index] = bitmap;
+                    }
+                    if (_playing) return;
+                    // 若最新目标已命中缓存，不允许旧解码结果把画面倒退。
+                    if (index == _index || !_cache.ContainsKey(_index)) {
+                        Still.Source = bitmap; Still.Visibility = Visibility.Visible; _displayedIndex = index;
+                    }
                 }
-                request.Token.ThrowIfCancellationRequested();
-                if (_media != media || _index != index) return;
-                Still.Source = bitmap; Still.Visibility = Visibility.Visible; _displayedIndex = index;
             }
             catch (OperationCanceledException) { }
-            catch (Exception e) { if (!request.IsCancellationRequested) Status.Text = "读取帧失败：" + e.Message; }
-            finally { if (_frame == request) _frame = null; request.Dispose(); }
+            catch (Exception error) { if (!request.IsCancellationRequested && !_disposed) Status.Text = "读取帧失败：" + error.Message; }
+            finally { if (_frame == request) { _frame = null; _frameWorker = null; } request.Dispose(); }
         }
 
         async void Step(int delta)
         {
-            if (_media == null || _load != null) return;
-            Pause(); _index = Math.Max(0, Math.Min(_media.Times.Length - 1, _index + delta));
+            if (_media == null || _load != null || _edit != null) return;
+            Pause(); _index = Math.Max(0, Math.Min(FrameCount - 1, _index + delta));
             UpdatePosition(); RevealCurrent(); await ShowFrameAsync();
         }
-        public void Suspend() { Pause(); _frame?.Cancel(); _pendingThumbnailIndices = null; _thumbnailRequest?.Cancel(); }
+        public void Suspend() { Pause(); _edit?.Cancel(); _frame?.Cancel(); _pendingThumbnailIndices = null; _thumbnailRequest?.Cancel(); }
         public void ResumePreview() => ScheduleThumbnails();
         void Pause()
         {
             _playing = false; _timer.Stop(); _gifClock.Stop();
+            _playbackRequest?.Cancel(); _editedPlayback?.Dispose(); _editedPlayback = null; _nextDecoded = null;
+            _playbackRequest?.Dispose(); _playbackRequest = null;
             if (_gif == null) Player.Pause();
             UpdatePlayIcon(false);
         }
@@ -182,26 +203,41 @@ namespace Captura
             PlayButton.ToolTip = label + "（空格）";
             System.Windows.Automation.AutomationProperties.SetName(PlayButton, label);
         }
-        void TogglePlay()
+        async void TogglePlay()
         {
-            if (_media == null || _load != null) return;
+            if (_media == null || _load != null || _edit != null) return;
             if (_playing) { Pause(); Step(0); return; }
             _frame?.Cancel();
-            if (_index == _media.Times.Length - 1) _index = 0;
+            if (_index == FrameCount - 1) _index = 0;
+            _timer.Interval = TimeSpan.FromMilliseconds(Edited ? 16 : 40);
             _playing = true; UpdatePlayIcon(true);
             if (_gif != null) {
                 Still.Visibility = Visibility.Visible;
-                Still.Source = DecodeBitmap(_gif.ReadFrame(_index)); _displayedIndex = _index;
-                _gifStartTime = _media.Times[_index]; _gifClock.Restart(); _timer.Start(); return;
+                Still.Source = DecodeBitmap(_gif.ReadFrame(SourceAt(_index))); _displayedIndex = _index;
+                _gifStartTime = FrameTimes[_index]; _gifClock.Restart(); _timer.Start(); return;
+            }
+            if (Edited) {
+                Player.Pause(); Still.Visibility = Visibility.Visible;
+                var operation = new CancellationTokenSource(); _playbackRequest = operation;
+                var token = operation.Token;
+                try {
+                    var session = await _service.StartPlaybackAsync(_media, _timeline.Snapshot(), _index, token);
+                    if (!_playing || _playbackRequest != operation || token.IsCancellationRequested) { session.Dispose(); return; }
+                    _editedPlayback = session; _nextDecoded = null;
+                    _gifStartTime = FrameTimes[_index]; _gifClock.Restart(); _timer.Start();
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception error) { if (_playbackRequest == operation) { Pause(); Status.Text = "编辑预览失败：" + error.Message; } }
+                return;
             }
             Still.Visibility = Visibility.Collapsed;
             Player.Play();
-            if (_playerReady) Player.Position = TimeSpan.FromSeconds(_media.Times[_index]);
+            if (_playerReady) Player.Position = TimeSpan.FromSeconds(_media.Times[SourceAt(_index)]);
             _timer.Start();
         }
         void ToggleSelected()
         {
-            if (_media == null || _load != null || _export != null) return;
+            if (!CanSelectFrames) return;
             if (_playing) { Pause(); Step(0); }
             _selection.Toggle(_index);
             RefreshSelection(); UpdatePosition();
@@ -221,11 +257,18 @@ namespace Captura
         }
         void UpdateExportState()
         {
-            if (ExportButton != null) ExportButton.IsEnabled = _media != null && _selected.Count > 0 && _load == null && _export == null;
+            CanSelectFrames = ExactIndexReady && _export == null && _edit == null && !_disposed;
+            if (ExportButton != null) ExportButton.IsEnabled = CanSelectFrames && _selected.Count > 0;
+            FrameMode.IsEnabled = PreviousButton.IsEnabled = NextButton.IsEnabled = CanSelectFrames;
+            AllButton.IsEnabled = ClearButton.IsEnabled = RangeStartButton.IsEnabled = RangeEndButton.IsEnabled = CanSelectFrames;
+            UpdateEditState();
         }
         void RevealCurrent()
         {
-            if (_index >= 0 && _index < _tiles.Count) FrameStrip.ScrollIntoView(_tiles[_index]);
+            if (_index >= 0 && _index < _tiles.Count) {
+                var scroll = VisualChild<ScrollViewer>(FrameStrip);
+                scroll?.ScrollToHorizontalOffset(Math.Max(0, _index - 1));
+            }
             ScheduleThumbnails();
         }
         static T Ancestor<T>(DependencyObject source) where T : DependencyObject
@@ -247,28 +290,31 @@ namespace Captura
         }
         void Review_KeyDown(object sender, KeyEventArgs e)
         {
-            if (!IsReviewFocus(e.OriginalSource as DependencyObject) || _media == null || _load != null) return;
+            if (!IsReviewFocus(e.OriginalSource as DependencyObject) || _media == null || _load != null || _edit != null) return;
             var modifiers = Keyboard.Modifiers;
+            if (e.Key == Key.Delete && modifiers == ModifierKeys.None) { DeleteFrames_Click(this, e); e.Handled = true; return; }
+            if (e.Key == Key.Z && modifiers == ModifierKeys.Control) { UndoEdit_Click(this, e); e.Handled = true; return; }
+            if (e.Key == Key.Y && modifiers == ModifierKeys.Control) { RedoEdit_Click(this, e); e.Handled = true; return; }
             if (modifiers.HasFlag(ModifierKeys.Alt)) return;
             if ((e.Key == Key.Return || e.Key == Key.Enter) && modifiers == ModifierKeys.Control) ToggleSelected();
-            else if (e.Key == Key.A && modifiers == ModifierKeys.Control) { if (_export == null) { _selection.SelectAll(); RefreshSelection(); } }
-            else if (e.Key == Key.A && modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) { if (_export == null) { _selection.Clear(); RefreshSelection(); } }
+            else if (e.Key == Key.A && modifiers == ModifierKeys.Control) { if (CanSelectFrames) { _selection.SelectAll(); RefreshSelection(); } }
+            else if (e.Key == Key.A && modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) { if (CanSelectFrames) { _selection.Clear(); RefreshSelection(); } }
             else if (e.Key == Key.Home || e.Key == Key.End) {
-                Pause(); _index = e.Key == Key.Home ? 0 : _media.Times.Length - 1;
+                Pause(); _index = e.Key == Key.Home ? 0 : FrameCount - 1;
                 UpdatePosition(); RevealCurrent(); _ = ShowFrameAsync();
             }
             else if (e.Key == Key.PageUp || e.Key == Key.PageDown) Step((e.Key == Key.PageUp ? -1 : 1) * Math.Max(1, (int)(FrameStrip.ActualWidth / 162)));
             else if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Space && modifiers != ModifierKeys.None) { }
             else if (e.Key == Key.Left || e.Key == Key.Right) {
                 var direction = e.Key == Key.Left ? -1 : 1;
-                if (FrameMode.IsChecked == true) {
+                if (FrameMode.IsChecked == true && ExactIndexReady) {
                     if (modifiers.HasFlag(ModifierKeys.Shift) && _export == null) {
-                        var target = Math.Max(0, Math.Min(_media.Times.Length - 1, _index + direction));
+                        var target = Math.Max(0, Math.Min(FrameCount - 1, _index + direction));
                         _selection.SelectRange(_selection.Anchor, target, modifiers.HasFlag(ModifierKeys.Control)); RefreshSelection();
                     }
                     Step(direction);
                 }
-                else if (!modifiers.HasFlag(ModifierKeys.Control)) SeekSeconds(direction * (modifiers.HasFlag(ModifierKeys.Shift) ? 5 : 1));
+                else if (!modifiers.HasFlag(ModifierKeys.Control)) SeekSeconds(direction * (modifiers.HasFlag(ModifierKeys.Shift) ? 5 : _secondsStep));
                 else return;
             }
             else if (e.Key == Key.Space && modifiers == ModifierKeys.None) { if (!e.IsRepeat) TogglePlay(); }
@@ -278,16 +324,16 @@ namespace Captura
 
         void SeekSeconds(int seconds)
         {
-            if (_media == null || _load != null) return;
+            if (_media == null || _load != null || _edit != null) return;
             var resume = _playing;
-            var time = _playing ? (_gif != null ? _gifStartTime + _gifClock.Elapsed.TotalSeconds : Player.Position.TotalSeconds) : _media.Times[_index];
-            Pause(); _index = _media.FrameAt(Math.Max(0, Math.Min(_media.Duration, time + seconds)));
-            if (resume && _index < _media.Times.Length - 1) TogglePlay(); else Step(0);
+            var time = _playing ? (_gif != null || Edited ? _gifStartTime + _gifClock.Elapsed.TotalSeconds : Player.Position.TotalSeconds) : FrameTimes[_index];
+            Pause(); _index = FrameAt(Math.Max(0, Math.Min(FrameDuration, time + seconds)));
+            if (resume && _index < FrameCount - 1) TogglePlay(); else Step(0);
             UpdatePosition();
         }
         void Mode_Changed(object sender, RoutedEventArgs e)
         {
-            if (Status == null) return;
+            if (Status == null || _updating) return;
             if (FrameMode.IsChecked == true && _media != null) { Pause(); Step(0); }
             UpdatePosition();
             if (IsLoaded && _media != null) PreviewSurface.Focus();
@@ -297,12 +343,13 @@ namespace Captura
         {
             var container = Ancestor<ListBoxItem>(e.OriginalSource as DependencyObject);
             if (!(container?.DataContext is FrameTile tile) || _media == null) return;
+            if (_edit != null) { e.Handled = true; return; }
             e.Handled = true; FrameStrip.Focus();
-            if (_export == null) {
+            if (CanSelectFrames) {
                 SelectTile(tile, Ancestor<CheckBox>(e.OriginalSource as DependencyObject) != null);
                 RefreshSelection();
             }
-            FrameMode.IsChecked = true;
+            if (ExactIndexReady) FrameMode.IsChecked = true;
             Pause(); _index = tile.Index; UpdatePosition();
             _ = ShowFrameAsync();
         }
@@ -319,7 +366,7 @@ namespace Captura
         }
         void TileCheck_Click(object sender, RoutedEventArgs e)
         {
-            if (_export != null || !((sender as FrameworkElement)?.DataContext is FrameTile tile)) return;
+            if (!CanSelectFrames || !((sender as FrameworkElement)?.DataContext is FrameTile tile)) return;
             e.Handled = true; SelectTile(tile, true); RefreshSelection();
             Pause(); _index = tile.Index; FrameMode.IsChecked = true; UpdatePosition(); _ = ShowFrameAsync();
             FrameStrip.Focus();
@@ -368,10 +415,10 @@ namespace Captura
                 _pendingThumbnailIndices = Enumerable.Range(first, last - first + 1).OrderBy(i => Math.Abs(i - center)).ToArray();
                 if (_thumbnailRequest != null && !_thumbnailRequest.IsCancellationRequested) return;
                 var request = new CancellationTokenSource(); _thumbnailRequest = request;
-                _ = LoadThumbnailsAsync(request, _media);
+                _ = LoadThumbnailsAsync(request, _media, _timelineRevision);
             }));
         }
-        async Task LoadThumbnailsAsync(CancellationTokenSource request, ReviewMedia media)
+        async Task LoadThumbnailsAsync(CancellationTokenSource request, ReviewMedia media, int revision)
         {
             try {
                 await Task.Delay(60, request.Token);
@@ -379,21 +426,21 @@ namespace Captura
                 try {
                     while (_pendingThumbnailIndices != null) {
                     request.Token.ThrowIfCancellationRequested();
-                    if (_media != media || _disposed) return;
+                    if (_media != media || _disposed || revision != _timelineRevision) return;
                     var indices = _pendingThumbnailIndices; _pendingThumbnailIndices = null;
                     foreach (var i in indices) {
                         request.Token.ThrowIfCancellationRequested();
-                        if (_media != media || _disposed) return;
+                        if (_media != media || _disposed || revision != _timelineRevision) return;
                         if (_pendingThumbnailIndices != null && !_pendingThumbnailIndices.Contains(i)) break;
                         if (_thumbnails.ContainsKey(i)) continue;
                         try {
-                            var bytes = await _service.ReadThumbnailAsync(media, i, request.Token);
+                            var bytes = await _service.ReadThumbnailAsync(media, SourceAt(i), request.Token);
                             request.Token.ThrowIfCancellationRequested();
-                            if (_media != media || _disposed) return;
+                            if (_media != media || _disposed || revision != _timelineRevision) return;
                             var image = DecodeBitmap(bytes); _thumbnails[i] = image; _tiles[i].Thumbnail = image;
                         }
                         catch (OperationCanceledException) { throw; }
-                        catch (IOException) { if (_media == media && !_disposed && i < _tiles.Count) _tiles[i].ThumbnailHint = "缩略图暂不可用"; }
+                        catch (IOException) { if (_media == media && !_disposed && revision == _timelineRevision && i < _tiles.Count) _tiles[i].ThumbnailHint = "缩略图暂不可用"; }
                     }
                     var center = indices.First();
                     foreach (var evict in _thumbnails.Keys.OrderByDescending(i => Math.Abs(i - center)).Take(Math.Max(0, _thumbnails.Count - 160)).ToArray()) {
@@ -408,7 +455,7 @@ namespace Captura
         }
         async void Timeline_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (_updating || _media == null || _load != null) return;
+            if (_updating || _media == null || _load != null || _edit != null) return;
             Pause(); _index = (int)Math.Round(e.NewValue); UpdatePosition(); await ShowFrameAsync();
         }
         void Previous_Click(object sender, RoutedEventArgs e) { FrameMode.IsChecked = true; Step(-1); Focus(); }
@@ -417,23 +464,23 @@ namespace Captura
         void Last_Click(object sender, RoutedEventArgs e) { GoToEdge(true); Focus(); }
         void GoToEdge(bool last)
         {
-            if (_media == null || _load != null) return;
-            Pause(); _index = last ? _media.Times.Length - 1 : 0; Step(0);
+            if (_media == null || _load != null || _edit != null) return;
+            Pause(); _index = last ? FrameCount - 1 : 0; Step(0);
         }
-        void BackFive_Click(object sender, RoutedEventArgs e) { SeekSeconds(-5); Focus(); }
-        void BackOne_Click(object sender, RoutedEventArgs e) { SeekSeconds(-1); Focus(); }
-        void ForwardOne_Click(object sender, RoutedEventArgs e) { SeekSeconds(1); Focus(); }
-        void ForwardFive_Click(object sender, RoutedEventArgs e) { SeekSeconds(5); Focus(); }
+        void BackFive_Click(object sender, RoutedEventArgs e) { _secondsStep = 5; FrameMode.IsChecked = false; SeekSeconds(-5); Focus(); }
+        void BackOne_Click(object sender, RoutedEventArgs e) { _secondsStep = 1; FrameMode.IsChecked = false; SeekSeconds(-1); Focus(); }
+        void ForwardOne_Click(object sender, RoutedEventArgs e) { _secondsStep = 1; FrameMode.IsChecked = false; SeekSeconds(1); Focus(); }
+        void ForwardFive_Click(object sender, RoutedEventArgs e) { _secondsStep = 5; FrameMode.IsChecked = false; SeekSeconds(5); Focus(); }
         void Play_Click(object sender, RoutedEventArgs e) { TogglePlay(); Focus(); }
         void Help_Click(object sender, RoutedEventArgs e) { ReviewHelp.IsOpen = !ReviewHelp.IsOpen; }
         void HelpClose_Click(object sender, RoutedEventArgs e) { ReviewHelp.IsOpen = false; }
         void Select_Click(object sender, RoutedEventArgs e) { FrameMode.IsChecked = true; ToggleSelected(); Focus(); }
-        void Clear_Click(object sender, RoutedEventArgs e) { if (_export != null) return; _selection.Clear(); RefreshSelection(); }
-        void All_Click(object sender, RoutedEventArgs e) { if (_export != null) return; _selection.SelectAll(); RefreshSelection(); }
-        void RangeStart_Click(object sender, RoutedEventArgs e) { if (_media == null) return; _rangeStart = _index; _selection.SetAnchor(_index); RangeStartButton.Content = $"起点：第 {_index + 1} 帧"; }
+        void Clear_Click(object sender, RoutedEventArgs e) { if (!CanSelectFrames) return; _selection.Clear(); RefreshSelection(); }
+        void All_Click(object sender, RoutedEventArgs e) { if (!CanSelectFrames) return; _selection.SelectAll(); RefreshSelection(); }
+        void RangeStart_Click(object sender, RoutedEventArgs e) { if (!CanSelectFrames) return; _rangeStart = _index; _selection.SetAnchor(_index); RangeStartButton.Content = $"起点：第 {_index + 1} 帧"; }
         void RangeEnd_Click(object sender, RoutedEventArgs e)
         {
-            if (_media == null || _export != null) return;
+            if (!CanSelectFrames) return;
             _selection.SelectRange(_rangeStart, _index, true);
             RefreshSelection(); UpdatePosition();
         }
@@ -452,10 +499,10 @@ namespace Captura
         void Preview_MouseDown(object sender, MouseButtonEventArgs e) { PreviewSurface.Focus(); e.Handled = true; }
         void Player_Opened(object sender, RoutedEventArgs e)
         {
-            if (_gif != null) return;
+            if (_gif != null || Edited) return;
             _playerReady = true;
             if (_media == null) return;
-            Player.Position = TimeSpan.FromSeconds(_media.Times[_index]);
+            Player.Position = TimeSpan.FromSeconds(_media.Times[SourceAt(_index)]);
             if (!_playing) Player.Pause();
         }
         static BitmapImage DecodeBitmap(byte[] bytes)
@@ -464,10 +511,10 @@ namespace Captura
             var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad; image.StreamSource = stream; image.EndInit(); image.Freeze();
             return image;
         }
-        void Player_Ended(object sender, RoutedEventArgs e) { if (_gif != null) return; Pause(); if (_media != null) { _index = _media.Times.Length - 1; Step(0); } }
-        void Player_Failed(object sender, ExceptionRoutedEventArgs e) { if (_gif != null) return; Pause(); Status.Text = "系统播放器无法播放此编码；仍可使用左右键逐帧查看和导出。"; Step(0); }
+        void Player_Ended(object sender, RoutedEventArgs e) { if (_gif != null || Edited) return; Pause(); if (_media != null) { _index = FrameCount - 1; Step(0); } }
+        void Player_Failed(object sender, ExceptionRoutedEventArgs e) { if (_gif != null || Edited) return; Pause(); Status.Text = "系统播放器无法播放此编码；仍可使用左右键逐帧查看和导出。"; Step(0); }
         void SetBusy(bool busy) { CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; UpdateExportState(); }
-        void Cancel_Click(object sender, RoutedEventArgs e) { _load?.Cancel(); _export?.Cancel(); Status.Text = "已请求取消；已导出的文件会保留。"; }
+        void Cancel_Click(object sender, RoutedEventArgs e) { _load?.Cancel(); _export?.Cancel(); _edit?.Cancel(); Status.Text = "已请求取消；已导出的文件会保留。"; }
         async void ExportSelected_Click(object sender, RoutedEventArgs e) => await ExportAsync(ExportFormat.SelectedIndex == 1 ? "mp4" : ExportFormat.SelectedIndex == 2 ? "gif" : "png");
         void ExportFormat_Changed(object sender, SelectionChangedEventArgs e)
         {
@@ -476,9 +523,10 @@ namespace Captura
         async Task ExportAsync(string kind)
         {
             if (_media == null || _selected.Count == 0) { Status.Text = "请先勾选缩略图，或使用 Ctrl / Shift 多选需要导出的帧。"; return; }
-            if (_export != null || _load != null) return;
+            if (!CanSelectFrames) return;
             if (!double.TryParse(ExportFps.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var fps) || fps < 1 || fps > 60 || double.IsNaN(fps)) { Status.Text = "合成帧率须为 1—60。"; return; }
-            Pause(); var media = _media; var frames = _selected.ToArray();
+            if (_edit != null) return;
+            Pause(); var media = _media; var frames = _selected.Select(SourceAt).ToArray();
             string output;
             try {
                 if (string.IsNullOrWhiteSpace(OutputRoot.Text)) throw new IOException("请设置导出目录。");
@@ -507,7 +555,7 @@ namespace Captura
         }
         public void Dispose()
         {
-            _disposed = true; _load?.Cancel(); _frame?.Cancel(); _export?.Cancel(); _thumbnailRequest?.Cancel();
+            _disposed = true; _indexing?.Cancel(); Pause(); _edit?.Cancel(); _load?.Cancel(); _frame?.Cancel(); _export?.Cancel(); _thumbnailRequest?.Cancel();
             _timer.Stop(); Player.Close(); Still.Source = null; _cache.Clear(); _thumbnails.Clear(); _tiles.Clear();
             _gif?.Dispose(); _gif = null;
         }

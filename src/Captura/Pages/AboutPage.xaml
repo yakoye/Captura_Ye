@@ -34,6 +34,8 @@
                     本版本补齐界面、悬停说明、录制模式和错误提示的简体中文翻译，默认使用简体中文。<LineBreak/>
                     新增 FFmpeg 自动查找、快速悬停提示、录制结果播放器和文件位置入口。<LineBreak/>
                     新增缩略图时间轴、Ctrl/Shift 离散与范围多选、独立导出面板及局部快捷键。<LineBreak/>
+                    支持按像素相似度移除重复帧、删除选中帧、按间隔减少帧数和撤销重做；当前帧导航尽量固定在时间轴第二张。<LineBreak/>
+                    长视频先预览、后台建立精确索引；方向键跟随最近步长，步进按钮支持长按，拖动进度条持续更新画面。<LineBreak/>
                     支持视频/GIF 拖入、按秒快进、逐帧查看，以及选中帧导出 PNG、视频或 GIF。<LineBreak/>
                     支持截图、屏幕录制、音频录制、摄像头和叠加层。MP4 等格式需要 FFmpeg。<LineBreak/>
                     项目仓库：<Hyperlink Command="{Binding HyperlinkCommand}" CommandParameter="https://github.com/yakoye/Captura_Ye">yakoye/Captura_Ye</Hyperlink><LineBreak/>
