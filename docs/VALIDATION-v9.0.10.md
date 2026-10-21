@@ -20,4 +20,8 @@
 
 v9.0.9 已公开并完成两处 5 文件归档，大小和 SHA-256 一致，原标签及文件保留。本修订使用新版本 v9.0.10，使用统一脚本发布，回下载全部资产并核对大小和 SHA-256 后公开，再分别归档到本地与 NAS。
 
-交付目录：`C:\Users\color\Downloads\yakoye-release\Captura_Ye\v9.0.10` 和 `\\192.168.7.100\Downloads\yakoye-release\Captura_Ye\v9.0.10`。以 `publish-v910-pipeline.log` 和 GitHub 现场状态作为发布完成证据。
+首次发布在 GitHub 登录状态查询时网络超时，保留 `publish-v910-pipeline.log`；尚未提交或上传。使用同一脚本及已验证包重试成功，完整完成日志为 `publish-v910-retry1.log`，详细目录 `temp/logs/20261021-164511`。
+
+源码发布提交及标签：`7f5002b1` / `v9.0.10`。全部 5 个资产回下载并逐文件核对大小及 SHA-256 后公开，现场查询确认 `isDraft=false`：[正式发行版](https://github.com/yakoye/Captura_Ye/releases/tag/v9.0.10)。
+
+交付目录：`C:\Users\color\Downloads\yakoye-release\Captura_Ye\v9.0.10` 和 `\\192.168.7.100\Downloads\yakoye-release\Captura_Ye\v9.0.10`。两处各 5 个根文件（安装 EXE、便携 ZIP、构建信息、发行说明、校验清单）均完成归档，并独立再次核对与源包大小及 SHA-256 一致。
