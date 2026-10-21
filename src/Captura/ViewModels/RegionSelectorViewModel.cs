@@ -48,10 +48,10 @@ namespace Captura.ViewModels
 
         public static Dictionary<InkCanvasEditingMode, string> Tools { get; } = new Dictionary<InkCanvasEditingMode, string>
         {
-            [InkCanvasEditingMode.None] = "Pointer",
-            [InkCanvasEditingMode.Ink] = "Pencil",
-            [InkCanvasEditingMode.EraseByPoint] = "Eraser",
-            [InkCanvasEditingMode.EraseByStroke] = "Stroke Eraser"
+            [InkCanvasEditingMode.None] = Captura.Loc.LanguageManager.Instance["Pointer"],
+            [InkCanvasEditingMode.Ink] = Captura.Loc.LanguageManager.Instance["Pencil"],
+            [InkCanvasEditingMode.EraseByPoint] = Captura.Loc.LanguageManager.Instance["Eraser"],
+            [InkCanvasEditingMode.EraseByStroke] = Captura.Loc.LanguageManager.Instance["StrokeEraser"]
         };
 
         public IReactiveProperty<InkCanvasEditingMode> SelectedTool { get; } = new ReactivePropertySlim<InkCanvasEditingMode>(Tools.Keys.First());

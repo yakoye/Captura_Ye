@@ -65,7 +65,7 @@ namespace Captura.Models
 
                 case RecentFileType.Video:
                     AddTrimMedia();
-                    list.Add(new RecentAction("Upload to YouTube", icons.YouTube, () => windowService.UploadToYouTube(this.FileName)));
+                    list.Add(new RecentAction(Captura.Loc.LanguageManager.Instance["UploadtoYouTube"], icons.YouTube, () => windowService.UploadToYouTube(this.FileName)));
                     break;
             }
 
@@ -78,7 +78,7 @@ namespace Captura.Models
         {
             if (!File.Exists(FileName))
             {
-                ServiceProvider.MessageProvider.ShowError("File not Found");
+                ServiceProvider.MessageProvider.ShowError(Captura.Loc.LanguageManager.Instance["FilenotFound"]);
 
                 return;
             }
@@ -93,7 +93,7 @@ namespace Captura.Models
         {
             if (!File.Exists(FileName))
             {
-                ServiceProvider.MessageProvider.ShowError("File not Found");
+                ServiceProvider.MessageProvider.ShowError(Captura.Loc.LanguageManager.Instance["FilenotFound"]);
 
                 return;
             }
@@ -109,7 +109,7 @@ namespace Captura.Models
             }
             catch (Exception e)
             {
-                ServiceProvider.MessageProvider.ShowException(e, "Copy to Clipboard failed");
+                ServiceProvider.MessageProvider.ShowException(e, Captura.Loc.LanguageManager.Instance["CopytoClipboardfailed"]);
             }
         }
 

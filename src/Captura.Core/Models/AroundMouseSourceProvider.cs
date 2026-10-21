@@ -20,9 +20,9 @@ namespace Captura.Video
             Source = AroundMouseItem;
         }
 
-        public string Name => "Around Mouse";
+        public string Name => Captura.Loc.LanguageManager.Instance["AroundMouse"];
 
-        public string Description => "Capture region surrounding mouse";
+        public string Description => Captura.Loc.LanguageManager.Instance["Captureregionsurroundingmouse"];
 
         public string Icon { get; }
 

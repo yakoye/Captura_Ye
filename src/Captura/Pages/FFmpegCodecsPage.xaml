@@ -32,7 +32,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
-                    <Label Content="Pixel Format"
+                    <Label Content="{Binding [PixelFormat], Source={StaticResource Loc}, Mode=OneWay}"
                            ContentStringFormat="{}{0}: "
                            Margin="0,5,5,5"/>
                     
@@ -41,13 +41,13 @@
                               SelectedValue="{Binding Settings.X264.PixelFormat, Mode=TwoWay}"
                               Margin="0,5"/>
 
-                    <Label Content="yuv420p has wider support whereas yuv444p has better quality"
+                    <Label Content="{Binding [yuv420phaswidersupportwhereasyuv444phasbetterquality], Source={StaticResource Loc}, Mode=OneWay}"
                            Grid.Row="1"
                            Grid.ColumnSpan="2"
                            FontWeight="Light"
                            Margin="0,0,0,5"/>
 
-                    <Label Content="Preset"
+                    <Label Content="{Binding [Preset], Source={StaticResource Loc}, Mode=OneWay}"
                            ContentStringFormat="{}{0}: "
                            Grid.Row="2"
                            Margin="0,5,5,5"/>
@@ -56,23 +56,25 @@
                               Grid.Row="2"
                               ItemsSource="{x:Static ffmpeg:X264Settings.Presets}"
                               SelectedValue="{Binding Settings.X264.Preset, Mode=TwoWay}"
-                              Margin="0,5"/>
+                              Margin="0,5">
+                        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={StaticResource LocalizedTextConverter}}"/></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                    <Label Content="ultrafast is recommended"
+                    <Label Content="{Binding [ultrafastisrecommended], Source={StaticResource Loc}, Mode=OneWay}"
                            Grid.Row="3"
                            Grid.ColumnSpan="2"
                            FontWeight="Light"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Custom">
+            <TabItem Header="{Binding [Custom], Source={StaticResource Loc}, Mode=OneWay}">
                 <DockPanel DataContext="{Binding FFmpegCodecsViewModel, Source={StaticResource ServiceLocator}}"
                            Name="CustomCodecsPanel">
                     <DockPanel DockPanel.Dock="Top">
-                        <local:ModernButton ToolTip="Add"
+                        <local:ModernButton ToolTip="{Binding [Add], Source={StaticResource Loc}, Mode=OneWay}"
                                             Command="{Binding AddCustomCodecCommand}"
                                             IconData="{Binding Icons.Add, Source={StaticResource ServiceLocator}}"/>
                         
-                        <Label Content="Add Codec"
+                        <Label Content="{Binding [AddCodec], Source={StaticResource Loc}, Mode=OneWay}"
                                VerticalAlignment="Center"/>
                     </DockPanel>
                     
@@ -97,19 +99,19 @@
                                                 <RowDefinition/>
                                             </Grid.RowDefinitions>
 
-                                            <local:ModernButton ToolTip="Delete"
+                                            <local:ModernButton ToolTip="{Binding [Delete], Source={StaticResource Loc}, Mode=OneWay}"
                                                                 Grid.Column="2"
                                                                 CommandParameter="{Binding}"
                                                                 Command="{Binding DataContext.RemoveCustomCodecCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
                                                                 IconData="{Binding Icons.Close, Source={StaticResource ServiceLocator}}"/>
                                     
-                                            <Label Content="Name"/>
+                                            <Label Content="{Binding [Name], Source={StaticResource Loc}, Mode=OneWay}"/>
                                             
                                             <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                      Grid.Column="1"
                                                      Margin="5"/>
                                             
-                                            <Label Content="Args"
+                                            <Label Content="{Binding [Args], Source={StaticResource Loc}, Mode=OneWay}"
                                                    Grid.Row="1"/>
 
                                             <TextBox Text="{Binding Args, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -117,7 +119,7 @@
                                                      Grid.Row="1"
                                                      Margin="5"/>
 
-                                            <Label Content="Extension"
+                                            <Label Content="{Binding [Extension], Source={StaticResource Loc}, Mode=OneWay}"
                                                    Grid.Row="2"/>
 
                                             <TextBox Text="{Binding Extension, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -125,7 +127,7 @@
                                                      Grid.Row="2"
                                                      Margin="5"/>
                                             
-                                            <Label Content="Audio Format"
+                                            <Label Content="{Binding [AudioFormat], Source={StaticResource Loc}, Mode=OneWay}"
                                                    Grid.Row="3"/>
                                             
                                             <ComboBox ItemsSource="{Binding DataContext.AudioCodecNames, ElementName=CustomCodecsPanel}"

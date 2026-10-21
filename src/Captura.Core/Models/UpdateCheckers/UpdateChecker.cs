@@ -24,8 +24,8 @@ namespace Captura.Models
             Process.Start(DownloadsUrl);
         }
 
-        const string DownloadsUrl = "https://mathewsachin.github.io/Captura/download";
-        const string LatestReleaseUrl = "https://api.github.com/repos/MathewSachin/Captura/releases/latest";
+        const string DownloadsUrl = "https://github.com/yakoye/Captura_Ye/releases/latest";
+        const string LatestReleaseUrl = "https://api.github.com/repos/yakoye/Captura_Ye/releases/latest";
 
         public async Task<Version> Check()
         {
@@ -50,6 +50,6 @@ namespace Captura.Models
             return null;
         }
 
-        public string BuildName => "STABLE";
+        public string BuildName => Captura.Loc.LanguageManager.Instance["Stable"];
     }
 }

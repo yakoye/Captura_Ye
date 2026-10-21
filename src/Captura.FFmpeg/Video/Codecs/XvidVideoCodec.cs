@@ -4,7 +4,7 @@ namespace Captura.FFmpeg
 {
     class XvidVideoCodec : FFmpegVideoCodec
     {
-        const string Descr = "Encode to Avi with Mp3 audio using Xvid encoder";
+        static readonly string Descr = Captura.Loc.LanguageManager.Instance["XvidDescription"];
 
         public XvidVideoCodec() : base("Avi (Xvid, Mp3)", ".avi", Descr) { }
 

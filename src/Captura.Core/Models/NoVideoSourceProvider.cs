@@ -45,9 +45,7 @@ namespace Captura.Video
 
         public override string Name => Loc.OnlyAudio;
 
-        public override string Description { get; } = @"No Video recorded.
-Can be used for audio-only recording.
-Make sure Audio sources are enabled.";
+        public override string Description { get; } = Captura.Loc.LanguageManager.Instance["AudioOnlyDescription"];
 
         public override string Icon { get; }
 

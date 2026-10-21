@@ -12,7 +12,7 @@
                         Opacity="0.9">
         <local:ModernButton.ContextMenu>
             <ContextMenu>
-                <MenuItem Header="ScreenShot (Region)"
+                <MenuItem Header="{Binding [ScreenShotRegion], Source={StaticResource Loc}, Mode=OneWay}"
                           Command="{Binding ScreenShotViewModel.ScreenshotRegionCommand, Source={StaticResource ServiceLocator}}">
                     <MenuItem.Icon>
                         <Image Width="13"
@@ -29,7 +29,7 @@
                     </MenuItem.Icon>
                 </MenuItem>
 
-                <MenuItem Header="ScreenShot (Screen)"
+                <MenuItem Header="{Binding [ScreenShotScreen], Source={StaticResource Loc}, Mode=OneWay}"
                           Command="{Binding ScreenShotViewModel.ScreenshotScreenCommand, Source={StaticResource ServiceLocator}}">
                     <MenuItem.Icon>
                         <Image Width="13"
@@ -46,7 +46,7 @@
                     </MenuItem.Icon>
                 </MenuItem>
 
-                <MenuItem Header="ScreenShot (Window)"
+                <MenuItem Header="{Binding [ScreenShotWindow], Source={StaticResource Loc}, Mode=OneWay}"
                           Command="{Binding ScreenShotViewModel.ScreenshotWindowCommand, Source={StaticResource ServiceLocator}}">
                     <MenuItem.Icon>
                         <Image Width="13"

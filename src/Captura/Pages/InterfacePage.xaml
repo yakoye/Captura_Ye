@@ -4,7 +4,7 @@
       xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
       xmlns:loc="clr-namespace:Captura.Loc;assembly=Captura.Loc"
       DataContext="{Binding MainViewModel, Source={StaticResource ServiceLocator}}"
-      Title="UI">
+      Title="{Binding [UI], Source={StaticResource Loc}, Mode=OneWay}">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>

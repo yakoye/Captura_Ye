@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Captura"
         xmlns:mui="http://firstfloorsoftware.com/ModernUI"
-        Title="FFmpeg Downloader"
+        Title="{Binding [FFmpegDownloader], Source={StaticResource Loc}, Mode=OneWay}"
         Height="400"
         Width="600"
         ResizeMode="NoResize"
@@ -25,14 +25,14 @@
                                 IconData="{Binding Icons.Close, Source={StaticResource ServiceLocator}}"
                                 DockPanel.Dock="Right"
                                 WindowChrome.IsHitTestVisibleInChrome="True"/>
-            <Label Content="FFmpeg Downloader"
+            <Label Content="{Binding [FFmpegDownloader], Source={StaticResource Loc}, Mode=OneWay}"
                    Margin="10,0"/>
         </DockPanel>
         
         <DockPanel DockPanel.Dock="Top"
                    Margin="15">
             <Label Margin="0,0,10,0"
-                   Content="Download Progress"
+                   Content="{Binding [DownloadProgress], Source={StaticResource Loc}, Mode=OneWay}"
                    ContentStringFormat="{}{0}:"/>
             <ProgressBar Value="{Binding Progress.Value, Mode=OneWay}"
                          Height="10"/>
@@ -42,7 +42,7 @@
                DockPanel.Dock="Top"
                Margin="0,10"
                HorizontalAlignment="Center"
-               ContentStringFormat="{}Status: {0}"/>
+               ContentStringFormat="{}状态：{0}"/>
 
         <DockPanel DockPanel.Dock="Bottom"
                    Margin="0,5">
@@ -56,7 +56,7 @@
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"/>
 
-                    <TextBlock Text="Target Folder:"/>
+                    <TextBlock Text="{Binding [TargetFolder], Source={StaticResource Loc}, Mode=OneWay}"/>
                 </DockPanel>
             </Button>
 
@@ -80,22 +80,22 @@
                    HorizontalAlignment="Center"
                    Style="{StaticResource TextColor}"
                    Opacity="0.9">
-            FFmpeg adds support for more output formats to Captura.<LineBreak/>
-            Latest build of FFmpeg is downloaded. This can also be used to update FFmpeg.<LineBreak/>
-            The Download size is nearly 70 MB.
+            FFmpeg 为 Captura 提供更多输出格式。<LineBreak/>
+            下载 FFmpeg，也可用于更新已有的 FFmpeg。<LineBreak/>
+            下载大小取决于所选 FFmpeg 版本。
         </TextBlock>
 
         <Grid HorizontalAlignment="Center"
               Margin="0,10"
               DockPanel.Dock="Top">
-            <Button Content="Start Download"
+            <Button Content="{Binding [StartDownload], Source={StaticResource Loc}, Mode=OneWay}"
                     Command="{Binding StartCommand}"
                     Visibility="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            <Button Content="Cancel Download"
+            <Button Content="{Binding [CancelDownload], Source={StaticResource Loc}, Mode=OneWay}"
                     IsEnabled="{Binding CanCancel.Value}"
                     Click="CloseButton_Click"
                     Visibility="{Binding InProgress.Value, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            <Button Content="Finish"
+            <Button Content="{Binding [Finish], Source={StaticResource Loc}, Mode=OneWay}"
                     IsEnabled="{Binding IsDone.Value}"
                     Click="CloseButton_Click"
                     Visibility="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolToVisibilityConverter}}"/>

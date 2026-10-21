@@ -8,7 +8,7 @@ namespace Captura.FFmpeg
         readonly FFmpegCodecSettings _codecSettings;
 
         public CustomFFmpegVideoCodec(FFmpegCodecSettings CodecSettings)
-            : base("", "", "Custom Codec")
+            : base("", "", Captura.Loc.LanguageManager.Instance["CustomCodec"])
         {
             _codecSettings = CodecSettings;
         }

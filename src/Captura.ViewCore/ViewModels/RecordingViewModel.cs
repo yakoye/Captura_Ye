@@ -257,7 +257,7 @@ namespace Captura.ViewModels
                     }
                     catch (Exception e)
                     {
-                        _messageProvider.ShowException(e, "Conversion Failed");
+                        _messageProvider.ShowException(e, Captura.Loc.LanguageManager.Instance["ConversionFailed"]);
                     }                    
                 }
 
@@ -268,7 +268,7 @@ namespace Captura.ViewModels
             }
             catch (Exception e)
             {
-                _messageProvider.ShowException(e, "Error occurred when stopping recording.\nThis might sometimes occur if you stop recording just as soon as you start it.");
+                _messageProvider.ShowException(e, Captura.Loc.LanguageManager.Instance["ErroroccurredwhenstoppingrecordingThismightsometimesoccurifyoustoprecordingjustassoonasyoustartit"]);
 
                 return;
             }
@@ -330,13 +330,13 @@ namespace Captura.ViewModels
             if (RecorderState.Value == Models.RecorderState.Recording)
             {
                 if (!_messageProvider.ShowYesNo(
-                    "A Recording is in progress. Are you sure you want to exit?", "Confirm Exit"))
+                    Captura.Loc.LanguageManager.Instance["ARecordingisinprogressAreyousureyouwanttoexit"], Captura.Loc.LanguageManager.Instance["ConfirmExit"]))
                     return false;
             }
             else if (RunningStopRecordingCount > 0)
             {
                 if (!_messageProvider.ShowYesNo(
-                    "Some Recordings have not finished writing to disk. Are you sure you want to exit?", "Confirm Exit"))
+                    Captura.Loc.LanguageManager.Instance["SomeRecordingshavenotfinishedwritingtodiskAreyousureyouwanttoexit"], Captura.Loc.LanguageManager.Instance["ConfirmExit"]))
                     return false;
             }
 

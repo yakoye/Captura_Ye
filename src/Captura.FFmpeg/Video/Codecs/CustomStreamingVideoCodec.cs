@@ -2,7 +2,7 @@
 {
     class CustomStreamingVideoCodec : StreamingVideoCodec
     {
-        public CustomStreamingVideoCodec() : base("Custom", "Stream to custom service") { }
+        public CustomStreamingVideoCodec() : base(Captura.Loc.LanguageManager.Instance["Custom"], Captura.Loc.LanguageManager.Instance["Streamtocustomservice"]) { }
 
         protected override string GetLink(FFmpegSettings Settings)
         {

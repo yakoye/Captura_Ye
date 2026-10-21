@@ -25,7 +25,7 @@ namespace Captura.ViewModels
         {
             var fileName = _dialogService.PickFile(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
-                "Select Image");
+                Captura.Loc.LanguageManager.Instance["SelectImage"]);
 
             if (fileName != null)
             {

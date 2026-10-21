@@ -37,7 +37,7 @@ namespace Captura.Models
             }
             catch
             {
-                sb.AppendLine("Unable to get screen dimensions");
+                sb.AppendLine("无法获取屏幕尺寸");
             }
 
             var audioSource = ServiceProvider.Get<IAudioSource>();
@@ -56,7 +56,7 @@ namespace Captura.Models
             }
             catch
             {
-                sb.AppendLine("Unable to get audio devices");
+                sb.AppendLine("无法获取音频设备");
             }
 
             try
@@ -70,7 +70,7 @@ namespace Captura.Models
             }
             catch
             {
-                sb.AppendLine("Unable to get webcams");
+                sb.AppendLine("无法获取摄像头");
             }
 
             sb.AppendLine();

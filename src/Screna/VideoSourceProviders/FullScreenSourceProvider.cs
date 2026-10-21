@@ -18,7 +18,7 @@ namespace Captura.Video
 
         public override string Name => Loc.FullScreen;
 
-        public override string Description { get; } = "Record Fullscreen.";
+        public override string Description { get; } = Captura.Loc.LanguageManager.Instance["RecordFullscreenDescription"];
 
         public override string Icon { get; }
 

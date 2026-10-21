@@ -8,19 +8,19 @@ namespace Captura
     // ReSharper disable once ClassNeverInstantiated.Global
     public class CmdOptions
     {
-        [Option("reset", HelpText = "Reset all setting values to default.")]
+        [Option("reset", HelpText = "将所有设置恢复为默认值。")]
         public bool Reset { get; set; }
 
-        [Option("tray", HelpText = "Start minimized into the system tray.")]
+        [Option("tray", HelpText = "启动时最小化到系统托盘。")]
         public bool Tray { get; set; }
         
-        [Option("no-hotkey", HelpText = "Do not Register hotkeys.")]
+        [Option("no-hotkey", HelpText = "不注册全局快捷键。")]
         public bool NoHotkeys { get; set; }
 
-        [Option("no-persist", HelpText = "Do not save any changes in settings.")]
+        [Option("no-persist", HelpText = "不保存本次设置更改。")]
         public bool NoPersist { get; set; }
 
-        [Option("settings", HelpText = "Settings Directory")]
+        [Option("settings", HelpText = "设置目录")]
         public string Settings { get; set; }
     }
 }

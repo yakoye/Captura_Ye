@@ -32,7 +32,7 @@ namespace Captura
             sb.ToString().WriteToClipboard();
         }
 
-        string _message = "An unhandled exception occurred. Here are the details.";
+        string _message = Captura.Loc.LanguageManager.Instance["AnunhandledexceptionoccurredHerearethedetails"];
 
         public string Message
         {

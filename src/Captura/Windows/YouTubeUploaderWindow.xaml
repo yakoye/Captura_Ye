@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:captura="clr-namespace:Captura"
-        Title="YouTube Uploader"
+        Title="{Binding [YouTubeUploader], Source={StaticResource Loc}, Mode=OneWay}"
         Height="400"
         Width="450"
         Background="{DynamicResource WindowBackground}"
@@ -27,7 +27,7 @@
                    Margin="0,0,0,5"
                    DockPanel.Dock="Top"/>
 
-            <Label Content="Title"
+            <Label Content="{Binding [Title], Source={StaticResource Loc}, Mode=OneWay}"
                    Margin="0,0,0,2"
                    DockPanel.Dock="Top"/>
 
@@ -35,7 +35,7 @@
                      Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      IsReadOnly="{Binding BeganUploading}"/>
 
-            <Label Content="Description"
+            <Label Content="{Binding [Description], Source={StaticResource Loc}, Mode=OneWay}"
                    Margin="0,7,0,2"
                    DockPanel.Dock="Top"/>
 
@@ -83,7 +83,7 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid Background="#01000000">
-                            <TextBlock Text="{Binding}"
+                            <TextBlock Text="{Binding Converter={StaticResource LocalizedTextConverter}}"
                                        HorizontalAlignment="Center"/>
                         </Grid>
                     </DataTemplate>

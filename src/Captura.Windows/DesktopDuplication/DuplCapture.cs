@@ -64,13 +64,13 @@ namespace Captura.Windows.DesktopDuplication
                 catch (SharpDXException e) when (e.Descriptor == ResultCode.NotCurrentlyAvailable)
                 {
                     throw new Exception(
-                        "There is already the maximum number of applications using the Desktop Duplication API running, please close one of the applications and try again.",
+                        "使用桌面复制接口的程序数量已达上限，请关闭其中一个程序后重试。",
                         e);
                 }
                 catch (SharpDXException e) when (e.Descriptor == ResultCode.Unsupported)
                 {
                     throw new NotSupportedException(
-                        "Desktop Duplication is not supported on this system.\nIf you have multiple graphic cards, try running Captura on integrated graphics.",
+                        "此系统不支持桌面复制。\n如果有多块显卡，请尝试使用集成显卡运行 Captura，或在视频设置中启用 GDI 录屏。",
                         e);
                 }
             }
@@ -111,7 +111,7 @@ namespace Captura.Windows.DesktopDuplication
 
                 if (acquireResult.Result.Failure)
                 {
-                    throw new Exception($"Failed to acquire next frame: {acquireResult.Result.Code}");
+                    throw new Exception($"获取下一帧失败： {acquireResult.Result.Code}");
                 }
 
                 using (acquireResult.DesktopResource)

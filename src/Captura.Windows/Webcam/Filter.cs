@@ -49,7 +49,7 @@ namespace Captura.Webcam
                 var ret = val as string;
 
                 if (string.IsNullOrEmpty(ret))
-                    throw new NotImplementedException("Device FriendlyName");
+                    throw new NotImplementedException("无法获取设备名称");
                 return ret;
             }
             catch (Exception)

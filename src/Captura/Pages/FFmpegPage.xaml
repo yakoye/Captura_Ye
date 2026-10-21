@@ -81,7 +81,7 @@
                         MouseUp="SelectFFmpegFolder">
                     <xctk:WatermarkTextBox IsReadOnly="True"
                                            IsEnabled="False"
-                                           Watermark="Load From PATH or App Directory"
+                                           Watermark="{Binding [LoadFromPATHorAppDirectory], Source={StaticResource Loc}, Mode=OneWay}"
                                            Text="{Binding Settings.FFmpeg.FolderPath}"/>
                 </Border>
             </DockPanel>
@@ -107,7 +107,7 @@
                                     Minimum="2"
                                     IsEnabled="{Binding Settings.FFmpeg.Resize}"/>
 
-                <Label Content="x"
+                <Label Content="×"
                        Grid.Column="2"
                        Margin="5,0"/>
 

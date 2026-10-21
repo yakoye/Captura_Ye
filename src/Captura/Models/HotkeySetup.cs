@@ -31,14 +31,14 @@ namespace Captura.Hotkeys
             if (notRegisteredOnStartup.Length <= 0)
                 return;
 
-            var message = "The following Hotkeys could not be registered:\nOther programs might be using them.\nTry changing them.\n\n";
+            var message = Captura.Loc.LanguageManager.Instance["HotkeyConflict"];
 
             foreach (var hotkey in notRegisteredOnStartup)
             {
                 message += $"{hotkey.Service.Description} - {hotkey}\n\n";
             }
 
-            _messageProvider.ShowError(message, "Failed to Register Hotkeys");
+            _messageProvider.ShowError(message, Captura.Loc.LanguageManager.Instance["FailedtoRegisterHotkeys"]);
         }
     }
 }

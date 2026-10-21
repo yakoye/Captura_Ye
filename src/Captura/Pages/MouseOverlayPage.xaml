@@ -2,7 +2,7 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-      Title="Mouse Overlay">
+      Title="{Binding [MouseOverlay], Source={StaticResource Loc}, Mode=OneWay}">
     <Grid>
         <ScrollViewer>
             <StackPanel DataContext="{Binding AboutViewModel, Source={StaticResource ServiceLocator}}">
@@ -13,7 +13,7 @@
                 <StackPanel Margin="5"
                             DataContext="{Binding Settings.MousePointerOverlay}">
 
-                    <CheckBox Content="Display"
+                    <CheckBox Content="{Binding [Display], Source={StaticResource Loc}, Mode=OneWay}"
                               IsChecked="{Binding Display, Mode=TwoWay}"
                               Margin="0,5"/>
 
@@ -61,7 +61,7 @@
                               HorizontalAlignment="Center"
                               VerticalAlignment="Center"/>
 
-                        <Label Content="Border"
+                        <Label Content="{Binding [Border], Source={StaticResource Loc}, Mode=OneWay}"
                                ContentStringFormat="{}{0}: "
                                Margin="0,5,5,5"
                                Grid.Column="1"/>
@@ -82,7 +82,7 @@
 
                 <StackPanel Margin="5"
                             DataContext="{Binding Settings.Clicks}">
-                    <CheckBox Content="Display Clicks"
+                    <CheckBox Content="{Binding [DisplayClicks], Source={StaticResource Loc}, Mode=OneWay}"
                               IsChecked="{Binding Display, Mode=TwoWay}"
                               Margin="0,5"/>
 
@@ -150,7 +150,7 @@
                               HorizontalAlignment="Center"
                               VerticalAlignment="Center"/>
 
-                        <Label Content="Border"
+                        <Label Content="{Binding [Border], Source={StaticResource Loc}, Mode=OneWay}"
                                ContentStringFormat="{}{0}: "
                                Margin="0,5,5,5"
                                Grid.Column="1"/>
@@ -165,10 +165,10 @@
                     </Grid>
                 </StackPanel>
 
-                <Label Content="Mouse Scroll"
+                <Label Content="{Binding [MouseScroll], Source={StaticResource Loc}, Mode=OneWay}"
                        FontWeight="DemiBold"
                        Margin="5,10,5,0"/>
-                <Label Content="Horizontal scrolls aren't displayed correctly"
+                <Label Content="{Binding [Horizontalscrollsarentdisplayedcorrectly], Source={StaticResource Loc}, Mode=OneWay}"
                        FontWeight="Light"
                        FontSize="9"
                        Margin="5,0"/>
@@ -176,7 +176,7 @@
                 <StackPanel Margin="5"
                             DataContext="{Binding Settings.Clicks}"
                             IsEnabled="{Binding Display}">
-                    <CheckBox Content="Display Scroll"
+                    <CheckBox Content="{Binding [DisplayScroll], Source={StaticResource Loc}, Mode=OneWay}"
                               IsChecked="{Binding DisplayScroll, Mode=TwoWay}"
                               Margin="0,5"/>
 
@@ -190,7 +190,7 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
 
-                        <Label Content="Circle Color"
+                        <Label Content="{Binding [CircleColor], Source={StaticResource Loc}, Mode=OneWay}"
                                ContentStringFormat="{}{0}: "
                                Margin="0,5,5,5"/>
                         <xctk:ColorPicker SelectedColor="{Binding ScrollCircleColor, Converter={StaticResource WpfColorConverter}, Mode=TwoWay}"
@@ -198,7 +198,7 @@
                                           Grid.Column="1"
                                           Margin="0,5"/>
 
-                        <Label Content="Arrow Color"
+                        <Label Content="{Binding [ArrowColor], Source={StaticResource Loc}, Mode=OneWay}"
                                ContentStringFormat="{}{0}: "
                                Margin="0,5,5,5"
                                Grid.Row="1"

@@ -111,7 +111,7 @@
                     
                     <Separator/>
 
-                    <MenuItem Header="ScreenShot (Region)"
+                    <MenuItem Header="{Binding [ScreenShotRegion], Source={StaticResource Loc}, Mode=OneWay}"
                               Command="{Binding ScreenShotViewModel.ScreenshotRegionCommand, Source={StaticResource ServiceLocator}}">
                         <MenuItem.Icon>
                             <Image Width="13"
@@ -128,7 +128,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
                       
-                    <MenuItem Header="ScreenShot (Screen)"
+                    <MenuItem Header="{Binding [ScreenShotScreen], Source={StaticResource Loc}, Mode=OneWay}"
                               Command="{Binding ScreenShotViewModel.ScreenshotScreenCommand, Source={StaticResource ServiceLocator}}">
                         <MenuItem.Icon>
                             <Image Width="13"
@@ -145,7 +145,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    <MenuItem Header="ScreenShot (Window)"
+                    <MenuItem Header="{Binding [ScreenShotWindow], Source={StaticResource Loc}, Mode=OneWay}"
                               Command="{Binding ScreenShotViewModel.ScreenshotWindowCommand, Source={StaticResource ServiceLocator}}">
                         <MenuItem.Icon>
                             <Image Width="13"
@@ -164,7 +164,7 @@
 
                     <Separator/>
 
-                    <MenuItem Header="Show Main Window"
+                    <MenuItem Header="{Binding [ShowMainWindow], Source={StaticResource Loc}, Mode=OneWay}"
                               Click="ShowMainWindow">
                         <MenuItem.Icon>
                             <Image Width="13"
@@ -285,7 +285,7 @@
                        Margin="5,0"
                        Visibility="{Binding ViewConditions.FpsVisibility.Value, Source={StaticResource ServiceLocator}}">
                     <TextBlock>
-                        FPS: <Run Text="{Binding FpsManager.Fps, Source={StaticResource ServiceLocator}, Mode=OneWay}"/>
+                        帧率：<Run Text="{Binding FpsManager.Fps, Source={StaticResource ServiceLocator}, Mode=OneWay}"/>
                     </TextBlock>
                 </Label>
 
@@ -296,7 +296,7 @@
 
                 <Grid xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
                       xmlns:interop="clr-namespace:System.Windows.Interop;assembly=PresentationCore">
-                    <Label Content="Preview"
+                    <Label Content="{Binding [Preview], Source={StaticResource Loc}, Mode=OneWay}"
                            HorizontalAlignment="Center"
                            Opacity="0.7"/>
                     <WindowsFormsHost Name="WinFormsHost"

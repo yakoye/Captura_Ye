@@ -20,7 +20,7 @@ namespace Captura.Video
 
             if (Count < 2)
             {
-                throw new ArgumentException("Count should be atleast 2", nameof(Count));
+                throw new ArgumentException("数量必须至少为 2", nameof(Count));
             }
 
             this.Frame = Frame ?? throw new ArgumentNullException(nameof(Frame));

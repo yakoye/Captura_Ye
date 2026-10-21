@@ -8,7 +8,7 @@ namespace Captura.Windows.MediaFoundation
         readonly Device _device;
 
         public string Extension => ".mp4";
-        public string Description { get; } = "Encode to Mp4: H.264 with AAC audio using Media Foundation Hardware encoder";
+        public string Description { get; } = "使用 Media Foundation 硬件编码 MP4：H.264 视频和 AAC 音频。";
 
         readonly string _name = "MF";
 

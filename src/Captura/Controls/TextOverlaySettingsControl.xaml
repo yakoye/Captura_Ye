@@ -23,7 +23,7 @@
                   Stretch="Uniform"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
-                  ToolTip="Font"/>
+                  ToolTip="{Binding [Font], Source={StaticResource Loc}, Mode=OneWay}"/>
 
             <local:FontSelector Grid.Column="1"
                                 Margin="10,5,5,5"
@@ -66,7 +66,7 @@
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"/>
 
-            <Label Content="Border"
+            <Label Content="{Binding [Border], Source={StaticResource Loc}, Mode=OneWay}"
                    Grid.Column="1"
                    ContentStringFormat="{}{0}: "/>
 

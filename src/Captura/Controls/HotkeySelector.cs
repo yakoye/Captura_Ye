@@ -83,7 +83,7 @@ namespace Captura
 
             _editing = !_editing;
 
-            Content = _editing ? "Press new Hotkey..." : HotkeyModel.ToString();
+            Content = _editing ? Captura.Loc.LanguageManager.Instance["PressnewHotkey"] : HotkeyModel.ToString();
         }
 
         protected override void OnLostFocus(RoutedEventArgs E)

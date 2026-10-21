@@ -4,7 +4,7 @@ namespace Captura.FFmpeg
 {
     class X264VideoCodec : FFmpegVideoCodec
     {
-        const string Descr = "Encode to Mp4: H.264 with AAC audio using x264 encoder.";
+        static readonly string Descr = Captura.Loc.LanguageManager.Instance["X264Description"];
 
         public X264VideoCodec() : base("Mp4 (H.264, AAC)", ".mp4", Descr) { }
 

@@ -62,16 +62,16 @@ namespace Captura.Hotkeys
                     return _loc.ToggleKeystrokes;
 
                 case ServiceName.ScreenShotRegion:
-                    return "Screenshot (Region)";
+                    return Captura.Loc.LanguageManager.Instance["ScreenShotRegion"];
 
                 case ServiceName.ScreenShotScreen:
-                    return "ScreenShot (Screen)";
+                    return Captura.Loc.LanguageManager.Instance["ScreenShotScreen"];
 
                 case ServiceName.ScreenShotWindow:
-                    return "ScreenShot (Window)";
+                    return Captura.Loc.LanguageManager.Instance["ScreenShotWindow"];
 
                 default:
-                    return SpaceAtCapitals(ServiceName);
+                    return Captura.Loc.LanguageManager.Instance[ServiceName.ToString()];
             }
         }
 

@@ -154,7 +154,7 @@ namespace Captura.FFmpeg
             {
                 if (!_audioPipe.WaitForConnection(5000))
                 {
-                    throw new Exception("Cannot connect Audio pipe to FFmpeg");
+                    throw new Exception("无法连接 FFmpeg 音频管道");
                 }
 
                 _firstAudio = false;
@@ -213,7 +213,7 @@ namespace Captura.FFmpeg
             {
                 if (!_ffmpegIn.WaitForConnection(5000))
                 {
-                    throw new Exception("Cannot connect Video pipe to FFmpeg");
+                    throw new Exception("无法连接 FFmpeg 视频管道");
                 }
 
                 _firstFrame = false;

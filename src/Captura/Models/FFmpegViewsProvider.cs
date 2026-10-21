@@ -37,8 +37,8 @@ namespace Captura.FFmpeg
             {
                 var dialog = new ModernDialog
                 {
-                    Title = "FFmpeg Unavailable",
-                    Content = "FFmpeg was not found on your system.\n\nSelect FFmpeg Folder if you alrady have FFmpeg on your system, else Download FFmpeg."
+                    Title = Captura.Loc.LanguageManager.Instance["FFmpegUnavailable"],
+                    Content = Captura.Loc.LanguageManager.Instance["FFmpegwasnotfoundonyoursystemSelectFFmpegFolderifyoualradyhaveFFmpegonyoursystemelseDownloadFFmpeg"]
                 };
 
                 // Yes -> Select FFmpeg Folder
@@ -49,7 +49,7 @@ namespace Captura.FFmpeg
                 dialog.NoButton.Content = _loc.DownloadFFmpeg;
                 dialog.NoButton.Click += (S, E) => ShowDownloader();
 
-                dialog.CancelButton.Content = "Cancel";
+                dialog.CancelButton.Content = Captura.Loc.LanguageManager.Instance["Cancel"];
 
                 dialog.Buttons = new[] { dialog.YesButton, dialog.NoButton, dialog.CancelButton };
 

@@ -124,7 +124,7 @@ namespace Captura.ViewModels
             }
             catch (WindowClosedException e)
             {
-                _messageProvider.ShowException(e, "Window Closed");
+                _messageProvider.ShowException(e, Captura.Loc.LanguageManager.Instance["WindowClosed"]);
 
                 return false;
             }

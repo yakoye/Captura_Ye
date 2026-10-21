@@ -6,7 +6,7 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:captura="clr-namespace:Captura"
         mc:Ignorable="d"
-        Title="Trim"
+        Title="{Binding [Trim], Source={StaticResource Loc}, Mode=OneWay}"
         Height="600"
         Width="600">
     <Window.DataContext>
@@ -88,7 +88,7 @@
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"/>
 
-                    <TextBlock Text="Open File ..."/>
+                    <TextBlock Text="{Binding [OpenFile], Source={StaticResource Loc}, Mode=OneWay}"/>
                 </DockPanel>
             </Button>
 
@@ -104,7 +104,7 @@
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"/>
 
-                    <TextBlock Text="Trim ..."/>
+                    <TextBlock Text="{Binding [TrimLabel], Source={StaticResource Loc}, Mode=OneWay}"/>
                 </DockPanel>
             </Button>
         </Grid>

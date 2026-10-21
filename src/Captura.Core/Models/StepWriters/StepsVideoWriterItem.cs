@@ -18,8 +18,8 @@
             return _writerItem.GetVideoFileWriter(Args);
         }
 
-        public override string ToString() => "Video";
+        public override string ToString() => Captura.Loc.LanguageManager.Instance["Video"];
 
-        public string Description => "Writes as a Video.";
+        public string Description => Captura.Loc.LanguageManager.Instance["WritesasaVideo"];
     }
 }

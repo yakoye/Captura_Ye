@@ -52,7 +52,7 @@
                 </DockPanel>
             </Button>
 
-            <Button Content="View Details"
+            <Button Content="{Binding [ViewDetails], Source={StaticResource Loc}, Mode=OneWay}"
                     Click="ViewDetails_OnClick"/>
         </StackPanel>
 

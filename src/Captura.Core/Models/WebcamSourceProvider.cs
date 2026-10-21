@@ -24,7 +24,7 @@ namespace Captura.Webcam
 
         public string Name => _loc.WebCam;
 
-        public string Description { get; } = "Record Webcam only";
+        public string Description { get; } = Captura.Loc.LanguageManager.Instance["RecordWebcamonly"];
         public string Icon { get; }
 
         public IVideoItem Source { get; }

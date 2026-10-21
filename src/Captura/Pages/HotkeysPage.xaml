@@ -97,12 +97,12 @@
                       Margin="7,0"/>
         <StackPanel Margin="5"
                     Grid.Column="2">
-            <Label Content="Toggle Region Picker"
+            <Label Content="{Binding [ToggleRegionPicker], Source={StaticResource Loc}, Mode=OneWay}"
                    FontWeight="Bold"
                    Margin="0,5"/>
 
             <CheckBox IsChecked="{Binding AboutViewModel.Settings.RegionPickerHotkeyAutoStartRecording, Source={StaticResource ServiceLocator}}"
-                      Content="Automatically start recording"/>
+                      Content="{Binding [Automaticallystartrecording], Source={StaticResource Loc}, Mode=OneWay}"/>
         </StackPanel>
     </Grid>
 </Page>

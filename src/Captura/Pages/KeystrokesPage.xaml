@@ -7,7 +7,7 @@
         <ScrollViewer DataContext="{Binding AboutViewModel, Source={StaticResource ServiceLocator}}">
             <StackPanel Margin="5"
                         DataContext="{Binding Settings.Keystrokes}">
-                <CheckBox Content="Display"
+                <CheckBox Content="{Binding [Display], Source={StaticResource Loc}, Mode=OneWay}"
                           IsChecked="{Binding Display, Mode=TwoWay}"
                           Margin="0,5"/>
 
@@ -24,7 +24,7 @@
                     <ComboBox DataContext="{Binding Keymap, Source={StaticResource ServiceLocator}}"
                               ItemsSource="{Binding AvailableKeymaps}"
                               SelectedValue="{Binding SelectedKeymap, Mode=TwoWay}"
-                              DisplayMemberPath="Name"/>
+                              DisplayMemberPath="DisplayName"/>
                 </DockPanel>
 
                 <captura:TextOverlaySettingsControl Visibility="{Binding SeparateTextFile, Converter={StaticResource NegatingConverter}}"
@@ -83,7 +83,7 @@
                                         Margin="0,5"/>
                 </Grid>
 
-                <CheckBox Content="Show Repeat Counter"
+                <CheckBox Content="{Binding [ShowRepeatCounter], Source={StaticResource Loc}, Mode=OneWay}"
                           IsChecked="{Binding ShowRepeatCounter, Mode=TwoWay}"
                           Margin="0,3"
                           Visibility="{Binding SeparateTextFile, Converter={StaticResource NegatingConverter}}"/>

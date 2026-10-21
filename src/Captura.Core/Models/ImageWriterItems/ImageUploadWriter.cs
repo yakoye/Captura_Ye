@@ -56,7 +56,7 @@ namespace Captura.Models
                         ServiceProvider.Get<IMainWindow>().IsVisible = true;
 
                         var yes = _messageProvider.ShowYesNo(
-                            $"{e.Message}\n\nDo you want to Save to Disk?", _loc.ImageUploadFailed);
+                            $"{e.Message}\n\n{Captura.Loc.LanguageManager.Instance["SaveToDiskQuestion"]}", _loc.ImageUploadFailed);
 
                         if (yes)
                             await _diskWriter.Save(Image, Format, FileName);
@@ -91,7 +91,7 @@ namespace Captura.Models
             }
         }
 
-        public string Display => "Upload";
+        public string Display => Captura.Loc.LanguageManager.Instance["Upload"];
 
         bool _active;
 

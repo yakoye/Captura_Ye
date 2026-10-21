@@ -2,7 +2,7 @@
 {
     class YouTubeLiveVideoCodec : StreamingVideoCodec
     {
-        public YouTubeLiveVideoCodec() : base("YouTube Live", "Stream to YouTube Live (Not Tested)") { }
+        public YouTubeLiveVideoCodec() : base("YouTube Live", Captura.Loc.LanguageManager.Instance["StreamtoYouTubeLiveNotTested"]) { }
 
         protected override string GetLink(FFmpegSettings Settings)
         {

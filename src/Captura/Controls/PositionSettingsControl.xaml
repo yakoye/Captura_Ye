@@ -20,7 +20,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Label Content="X: "
+            <Label Content="横向位置："
                    Margin="0,3"/>
             <ComboBox ItemsSource="{x:Static viewModels:MainViewModel.XAlignments}"
                       SelectedValue="{Binding HorizontalAlignment, Mode=TwoWay}"
@@ -32,7 +32,7 @@
                                 Grid.Column="2"
                                 Margin="0,3"/>
 
-            <Label Content="Y: "
+            <Label Content="纵向位置："
                    Grid.Row="1"
                    Margin="0,3"/>
             <ComboBox ItemsSource="{x:Static viewModels:MainViewModel.YAlignments}"

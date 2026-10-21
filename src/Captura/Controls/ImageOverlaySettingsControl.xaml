@@ -28,7 +28,7 @@
                                 Minimum="1"
                                 IsEnabled="{Binding Resize}"/>
 
-            <Label Content="x"
+            <Label Content="×"
                    Grid.Column="2"
                    Margin="5,0"/>
 

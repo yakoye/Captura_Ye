@@ -9,8 +9,8 @@
             return new ImageFolderWriter(Args.FileName);
         }
 
-        public override string ToString() => "Images";
+        public override string ToString() => Captura.Loc.LanguageManager.Instance["Images"];
 
-        public string Description => "Writes images to a folder.";
+        public string Description => Captura.Loc.LanguageManager.Instance["Writesimagestoafolder"];
     }
 }

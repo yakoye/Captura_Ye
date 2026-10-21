@@ -6,7 +6,7 @@ namespace Captura.FFmpeg
     {
         readonly string _fFmpegCodecName;
 
-        const string NVencSupport = "If this doesn't work, please check on NVIDIA's website whether your graphic card supports NVenc.";
+        static readonly string NVencSupport = Captura.Loc.LanguageManager.Instance["NvencSupport"];
 
         NvencVideoCodec(string Name, string FFmpegCodecName, string Description)
             : base(Name, ".mp4", $"{Description}\n{NVencSupport}")
@@ -25,12 +25,12 @@ namespace Captura.FFmpeg
 
         public static NvencVideoCodec CreateH264()
         {
-            return new NvencVideoCodec("NVenc: Mp4 (H.264, AAC)", "h264_nvenc", "Encode to Mp4: H.264 with AAC audio using NVenc");
+            return new NvencVideoCodec("NVenc: Mp4 (H.264, AAC)", "h264_nvenc", Captura.Loc.LanguageManager.Instance["NvencH264Description"]);
         }
 
         public static NvencVideoCodec CreateHevc()
         {
-            return new NvencVideoCodec("NVenc: Mp4 (HEVC, AAC)", "hevc_nvenc", "Encode to Mp4: HEVC with AAC audio using NVenc");
+            return new NvencVideoCodec("NVenc: Mp4 (HEVC, AAC)", "hevc_nvenc", Captura.Loc.LanguageManager.Instance["NvencHevcDescription"]);
         }
     }
 }

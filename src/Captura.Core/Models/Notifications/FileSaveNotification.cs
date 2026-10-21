@@ -25,13 +25,13 @@ namespace Captura
 
             _fileName = RecentItem.FileName;
 
-            PrimaryText = $"Saving {_recentItem.FileType} ...";
+            PrimaryText = string.Format(Captura.Loc.LanguageManager.Instance["SavingFile"], Captura.Loc.LanguageManager.Instance[_recentItem.FileType.ToString()]);
             SecondaryText = Path.GetFileName(_fileName);
         }
 
         public void Converting()
         {
-            PrimaryText = "Converting ...";
+            PrimaryText = Captura.Loc.LanguageManager.Instance["Converting"];
         }
 
         public void Converted(string NewFileName)

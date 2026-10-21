@@ -58,7 +58,6 @@ namespace Captura.FFmpeg
             return null;
         }
 
-        public string Description => @"Use FFmpeg for encoding.
-Requires ffmpeg.exe, if not found option for downloading or specifying path is shown.";
+        public string Description => Captura.Loc.LanguageManager.Instance["FFmpegDescription"];
     }
 }

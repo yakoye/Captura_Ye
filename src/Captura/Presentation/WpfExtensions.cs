@@ -91,7 +91,7 @@ namespace Captura
             {
                 AddExtension = true,
                 DefaultExt = ".png",
-                Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg|Bitmap Image|*.bmp|TIFF Image|*.tiff"
+                Filter = "PNG 图片|*.png|JPEG 图片|*.jpg;*.jpeg|位图图片|*.bmp|TIFF 图片|*.tiff"
             };
 
             if (DefaultFileName != null)

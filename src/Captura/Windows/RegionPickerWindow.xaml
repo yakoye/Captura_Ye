@@ -6,7 +6,7 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:Captura"
         mc:Ignorable="d"
-        Title="Region Picker"
+        Title="{Binding [RegionPicker], Source={StaticResource Loc}, Mode=OneWay}"
         d:DesignHeight="600"
         d:DesignWidth="800"
         WindowStyle="None"

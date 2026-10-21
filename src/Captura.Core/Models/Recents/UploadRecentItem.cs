@@ -36,7 +36,7 @@ namespace Captura.Models
 
         async void OnDelete()
         {
-            if (!ServiceProvider.MessageProvider.ShowYesNo($"Are you sure you want to Delete: {Link}?", "Confirm Deletion"))
+            if (!ServiceProvider.MessageProvider.ShowYesNo(string.Format(Captura.Loc.LanguageManager.Instance["ConfirmDeleteLink"], Link), Captura.Loc.LanguageManager.Instance["ConfirmDeletion"]))
                 return;
 
             try
@@ -45,7 +45,7 @@ namespace Captura.Models
             }
             catch (Exception e)
             {
-                ServiceProvider.MessageProvider.ShowException(e, $"Could not Delete: {Link}");
+                ServiceProvider.MessageProvider.ShowException(e, string.Format(Captura.Loc.LanguageManager.Instance["DeleteLinkFailed"], Link));
 
                 return;
             }

@@ -13,37 +13,37 @@ namespace Captura.ViewModels
 
         public IEnumerable<FileNameFormatGroup> FormatGroups { get; } = new []
         {
-            new FileNameFormatGroup("Time", new []
+            new FileNameFormatGroup(Captura.Loc.LanguageManager.Instance["Time"], new []
             {
-                new FileNameFormatItem("%HH%", "Hours (24 hr) (20)"),
-                new FileNameFormatItem("%hh%", "Hours (12 hr) (08)"),
-                new FileNameFormatItem("%mm%", "Minutes (58)"),
-                new FileNameFormatItem("%ss%", "Seconds (54)"),
-                new FileNameFormatItem("%tt%", "AM / PM"),
-                new FileNameFormatItem("%zzz%", "Time Zone (+05:30)")
+                new FileNameFormatItem("%HH%", Captura.Loc.LanguageManager.Instance["Hours24hr20"]),
+                new FileNameFormatItem("%hh%", Captura.Loc.LanguageManager.Instance["Hours12hr08"]),
+                new FileNameFormatItem("%mm%", Captura.Loc.LanguageManager.Instance["Minutes58"]),
+                new FileNameFormatItem("%ss%", Captura.Loc.LanguageManager.Instance["Seconds54"]),
+                new FileNameFormatItem("%tt%", Captura.Loc.LanguageManager.Instance["AMPM"]),
+                new FileNameFormatItem("%zzz%", Captura.Loc.LanguageManager.Instance["TimeZone0530"])
             }),
-            new FileNameFormatGroup("Year", new []
+            new FileNameFormatGroup(Captura.Loc.LanguageManager.Instance["Year"], new []
             {
-                new FileNameFormatItem("%yyyy%", "Year (2018)"),
-                new FileNameFormatItem("%yy%", "Year (18)")
+                new FileNameFormatItem("%yyyy%", Captura.Loc.LanguageManager.Instance["Year2018"]),
+                new FileNameFormatItem("%yy%", Captura.Loc.LanguageManager.Instance["Year18"])
             }),
-            new FileNameFormatGroup("Month", new []
+            new FileNameFormatGroup(Captura.Loc.LanguageManager.Instance["Month"], new []
             {
-                new FileNameFormatItem("%MMMM%", "Month (September)"),
-                new FileNameFormatItem("%MMM%", "Month (Sep)"),
-                new FileNameFormatItem("%MM%", "Month (09)")
+                new FileNameFormatItem("%MMMM%", Captura.Loc.LanguageManager.Instance["MonthSeptember"]),
+                new FileNameFormatItem("%MMM%", Captura.Loc.LanguageManager.Instance["MonthSep"]),
+                new FileNameFormatItem("%MM%", Captura.Loc.LanguageManager.Instance["Month09"])
             }),
-            new FileNameFormatGroup("Date", new []
+            new FileNameFormatGroup(Captura.Loc.LanguageManager.Instance["Date"], new []
             {
-                new FileNameFormatItem("%dd%", "Date (22)"),
-                new FileNameFormatItem("%ddd%", "Day (Tue)"),
-                new FileNameFormatItem("%dddd%", "Day (Tuesday)")
+                new FileNameFormatItem("%dd%", Captura.Loc.LanguageManager.Instance["Date22"]),
+                new FileNameFormatItem("%ddd%", Captura.Loc.LanguageManager.Instance["DayTue"]),
+                new FileNameFormatItem("%dddd%", Captura.Loc.LanguageManager.Instance["DayTuesday"])
             }),
-            new FileNameFormatGroup("Other", new []
+            new FileNameFormatGroup(Captura.Loc.LanguageManager.Instance["Other"], new []
             {
-                new FileNameFormatItem("%computer%", "Company Name"), 
-                new FileNameFormatItem("%user%", "User Name")
-            }), 
+                new FileNameFormatItem("%computer%", Captura.Loc.LanguageManager.Instance["CompanyName"]),
+                new FileNameFormatItem("%user%", Captura.Loc.LanguageManager.Instance["UserName"])
+            }),
         };
 
         public string FilenameFormat

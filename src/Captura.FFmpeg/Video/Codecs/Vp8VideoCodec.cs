@@ -4,7 +4,7 @@ namespace Captura.FFmpeg
 {
     class Vp8VideoCodec : FFmpegVideoCodec
     {
-        const string Descr = "Encode to WebM: Vp8 with Opus audio";
+        static readonly string Descr = Captura.Loc.LanguageManager.Instance["Vp8Description"];
 
         public Vp8VideoCodec() : base("WebM (Vp8, Opus)", ".webm", Descr) { }
 

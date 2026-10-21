@@ -16,10 +16,10 @@ namespace Captura
                         return "English";
 
                     case "zh-CN":
-                        return "Chinese (Simplified) (中文简体)";
+                        return "简体中文";
 
                     case "zh-TW":
-                        return "Chinese (Traditional) (中文繁体)";
+                        return "繁體中文";
 
                     default:
                         return $"{c.DisplayName} ({c.NativeName})";

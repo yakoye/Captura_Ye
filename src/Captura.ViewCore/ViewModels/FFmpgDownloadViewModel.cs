@@ -90,10 +90,10 @@ namespace Captura.ViewModels
                             return M.ErrorMessage;
 
                         case FFmpegDownloaderState.Downloading:
-                            return $"{FFmpegDownloaderState.Downloading} ({M.DownloadProgress}%)";
+                            return $"{Captura.Loc.LanguageManager.Instance["Downloading"]} ({M.DownloadProgress}%)";
 
                         default:
-                            return M.State.ToString();
+                            return Captura.Loc.LanguageManager.Instance[M.State.ToString()];
                     }
                 })
                 .ToReadOnlyReactivePropertySlim();
@@ -123,7 +123,7 @@ namespace Captura.ViewModels
         {
             if (CanCancel.Value)
             {
-                if (!_messageProvider.ShowYesNo("Are you sure you want to cancel download?", "Cancel Download"))
+                if (!_messageProvider.ShowYesNo(Captura.Loc.LanguageManager.Instance["Areyousureyouwanttocanceldownload"], Captura.Loc.LanguageManager.Instance["CancelDownload"]))
                     return false;
 
                 _cancellationTokenSource.Cancel();

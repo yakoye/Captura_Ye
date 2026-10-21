@@ -48,7 +48,7 @@ namespace Captura.Video
 
         public override string Name => Loc.Screen;
 
-        public override string Description { get; } = "Record a specific screen.";
+        public override string Description { get; } = Captura.Loc.LanguageManager.Instance["RecordScreenDescription"];
 
         public override string Icon { get; }
 

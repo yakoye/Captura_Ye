@@ -49,7 +49,7 @@ namespace Captura.FFmpeg
             }
             catch (Exception e)
             {
-                Progress.Report(new FFmpegDownloaderProgress($"Failed - {e.Message}"));
+                Progress.Report(new FFmpegDownloaderProgress($"下载失败：{e.Message}"));
                 return false;
             }
 
@@ -71,12 +71,12 @@ namespace Captura.FFmpeg
             }
             catch (UnauthorizedAccessException)
             {
-                Progress.Report(new FFmpegDownloaderProgress("Can't extract to specified directory"));
+                Progress.Report(new FFmpegDownloaderProgress(Captura.Loc.LanguageManager.Instance["Cantextracttospecifieddirectory"]));
                 return false;
             }
             catch
             {
-                Progress.Report(new FFmpegDownloaderProgress("Extraction Failed"));
+                Progress.Report(new FFmpegDownloaderProgress(Captura.Loc.LanguageManager.Instance["ExtractionFailed"]));
                 return false;
             }
 

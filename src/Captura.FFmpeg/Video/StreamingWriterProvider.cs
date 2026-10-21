@@ -9,7 +9,7 @@ namespace Captura.FFmpeg
     // ReSharper disable once ClassNeverInstantiated.Global
     public class StreamingWriterProvider : IVideoWriterProvider
     {
-        public string Name => "Stream";
+        public string Name => Captura.Loc.LanguageManager.Instance["Stream"];
 
         public IEnumerator<IVideoWriterItem> GetEnumerator()
         {
@@ -43,7 +43,6 @@ namespace Captura.FFmpeg
             return null;
         }
 
-        public string Description => @"Stream to streaming sites using FFmpeg (Alpha).
-API keys can be set on FFmpeg settings page.";
+        public string Description => Captura.Loc.LanguageManager.Instance["StreamingDescription"];
     }
 }

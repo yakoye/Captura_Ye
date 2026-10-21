@@ -4,7 +4,7 @@ namespace Captura.FFmpeg
 {
     class QsvHevcVideoCodec : FFmpegVideoCodec
     {
-        const string Descr = "Encode to Mp4: HEVC (H.265) with AAC audio using Intel QuickSync hardware encoding.\nRequires the processor to be Skylake generation or later";
+        static readonly string Descr = Captura.Loc.LanguageManager.Instance["QsvDescription"];
 
         public QsvHevcVideoCodec() : base("Intel QuickSync: Mp4 (HEVC, AAC)", ".mp4", Descr) { }
 

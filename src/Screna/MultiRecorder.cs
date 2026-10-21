@@ -10,7 +10,7 @@ namespace Captura.Video
         {
             if (Recorders == null || Recorders.Length < 2)
             {
-                throw new ArgumentException("Atleast two recorders required.", nameof(Recorders));
+                throw new ArgumentException("至少需要两个录制器。", nameof(Recorders));
             }
 
             _recorders = Recorders;

@@ -19,7 +19,7 @@ namespace Captura.Models
             return Task.CompletedTask;
         }
 
-        public string Display => "Editor";
+        public string Display => Captura.Loc.LanguageManager.Instance["Editor"];
 
         bool _active;
 

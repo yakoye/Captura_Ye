@@ -20,3 +20,7 @@ TestResults/
 /temp/
 /dist/
 *.pfx
+
+# 本地构建日志和审查中间文件
+/*.log
+/strings-audit.txt

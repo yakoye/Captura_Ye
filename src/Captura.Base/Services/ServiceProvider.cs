@@ -1,4 +1,4 @@
-using Captura.Models;
+﻿using Captura.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -84,11 +84,11 @@ namespace Captura
             try { Process.Start(StartInfo.FileName); }
             catch (Win32Exception e) when (e.NativeErrorCode == 2)
             {
-                MessageProvider.ShowError($"Could not find file: {StartInfo.FileName}");
+                MessageProvider.ShowError($"找不到文件： {StartInfo.FileName}");
             }
             catch (Exception e)
             {
-                MessageProvider.ShowException(e, $"Could not open file: {StartInfo.FileName}");
+                MessageProvider.ShowException(e, $"无法打开文件： {StartInfo.FileName}");
             }
         }
 

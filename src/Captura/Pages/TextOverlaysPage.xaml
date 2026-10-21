@@ -5,10 +5,10 @@
     <Grid>
         <DockPanel DataContext="{Binding CustomOverlays, Source={StaticResource ServiceLocator}}">
             <DockPanel DockPanel.Dock="Top">
-                <captura:ModernButton ToolTip="Add"
+                <captura:ModernButton ToolTip="{Binding [Add], Source={StaticResource Loc}, Mode=OneWay}"
                                       Command="{Binding AddCommand}"
                                       IconData="{Binding Icons.Add, Source={StaticResource ServiceLocator}}"/>
-                <Label Content="Add More"/>
+                <Label Content="{Binding [AddMore], Source={StaticResource Loc}, Mode=OneWay}"/>
             </DockPanel>
 
             <ListView Margin="5"
@@ -16,7 +16,7 @@
                       SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="Overlay"/>
+                        <TextBlock Text="{Binding [Overlay], Source={StaticResource Loc}, Mode=OneWay}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -31,17 +31,17 @@
                                                     DockPanel.Dock="Bottom"/>
 
                 <DockPanel DockPanel.Dock="Top">
-                    <captura:ModernButton ToolTip="Remove"
+                    <captura:ModernButton ToolTip="{Binding [Remove], Source={StaticResource Loc}, Mode=OneWay}"
                                           Command="{Binding RemoveCommand}"
                                           CommandParameter="{Binding SelectedItem}"
                                           IconData="{Binding Icons.Close, Source={StaticResource ServiceLocator}}"
                                           DockPanel.Dock="Right"/>
 
                     <CheckBox IsChecked="{Binding SelectedItem.Display, Mode=TwoWay}"
-                              Content="Display"/>
+                              Content="{Binding [Display], Source={StaticResource Loc}, Mode=OneWay}"/>
                 </DockPanel>
 
-                <Label Content="Text"
+                <Label Content="{Binding [Text], Source={StaticResource Loc}, Mode=OneWay}"
                        ContentStringFormat="{}{0}: "/>
 
                 <TextBox Text="{Binding SelectedItem.Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

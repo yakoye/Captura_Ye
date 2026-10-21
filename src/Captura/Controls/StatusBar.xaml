@@ -53,13 +53,13 @@
                     </Path.Triggers>
                 </Path>
 
-                <TextBlock Text="Checking for updates ..."/>
+                <TextBlock Text="{Binding [Checkingforupdates], Source={StaticResource Loc}, Mode=OneWay}"/>
             </DockPanel>
         </Button>
 
         <Button Grid.Column="0"
                 Command="{Binding CheckCommand}"
-                ToolTip="Check Again"
+                ToolTip="{Binding [CheckAgain], Source={StaticResource Loc}, Mode=OneWay}"
                 Visibility="{Binding CheckFailed, Converter={StaticResource BoolToVisibilityConverter}}">
             <Button.Content>
                 <DockPanel>
@@ -68,7 +68,7 @@
                           Height="12"
                           Fill="#b71c1c"/>
 
-                    <TextBlock Text="Update Check Failed"/>
+                    <TextBlock Text="{Binding [UpdateCheckFailed], Source={StaticResource Loc}, Mode=OneWay}"/>
                 </DockPanel>
             </Button.Content>
         </Button>
@@ -98,7 +98,7 @@
                           Height="12"/>
 
                     <TextBlock>
-                        Update Available (<Run Text="{Binding NewVersion, Mode=OneWay}"/>)
+                        发现新版本（<Run Text="{Binding NewVersion, Mode=OneWay}"/>)
                     </TextBlock>
                 </DockPanel>
             </Button.Content>
@@ -106,7 +106,7 @@
 
         <Button Grid.Column="0"
                 Command="{Binding CheckCommand}"
-                ToolTip="Check Again">
+                ToolTip="{Binding [CheckAgain], Source={StaticResource Loc}, Mode=OneWay}">
             <Button.Style>
                 <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -130,7 +130,7 @@
                           Height="12"
                           Fill="LimeGreen"/>
 
-                    <TextBlock Text="Up to date"/>
+                    <TextBlock Text="{Binding [Uptodate], Source={StaticResource Loc}, Mode=OneWay}"/>
                 </DockPanel>
             </Button.Content>
         </Button>

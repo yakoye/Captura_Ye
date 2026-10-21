@@ -50,7 +50,7 @@ namespace Captura.Loc
             _defaultLanguage = LoadLang("en");
 
             if (_currentCulture == null)
-                CurrentCulture = new CultureInfo("en");
+                CurrentCulture = new CultureInfo("zh-CN");
 
             if (cultures.Count == 0)
                 cultures.Add(CurrentCulture);

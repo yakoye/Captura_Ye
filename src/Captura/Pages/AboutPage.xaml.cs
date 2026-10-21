@@ -15,7 +15,7 @@ namespace Captura
         {
             var ofd = new OpenFileDialog
             {
-                Filter = "Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.wmp;*.tiff",
+                Filter = "图片文件|*.png;*.jpg;*.jpeg;*.bmp;*.wmp;*.tiff",
                 CheckFileExists = true,
                 CheckPathExists = true
             };

@@ -90,7 +90,7 @@ namespace Captura.Webcam
 
         public CaptureWebcam(Filter VideoDevice, Action OnClick, IntPtr PreviewWindow)
         {
-            _videoDevice = VideoDevice ?? throw new ArgumentException("The videoDevice parameter must be set to a valid Filter.\n");
+            _videoDevice = VideoDevice ?? throw new ArgumentException("必须选择有效的摄像头设备。\n");
 
             _form = new DummyForm();
             _form.Show();
@@ -462,7 +462,7 @@ namespace Captura.Webcam
                     Marshal.ThrowExceptionForHR(hr);
 
                 if (media.formatType != FormatType.VideoInfo || media.formatPtr == IntPtr.Zero)
-                    throw new NotSupportedException("Unknown Grabber Media Format");
+                    throw new NotSupportedException("不支持的摄像头媒体格式");
 
                 _videoInfoHeader = (VideoInfoHeader)Marshal.PtrToStructure(media.formatPtr, typeof(VideoInfoHeader));
 

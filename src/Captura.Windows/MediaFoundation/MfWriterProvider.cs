@@ -33,6 +33,6 @@ namespace Captura.Windows.MediaFoundation
             return Cli == "mf" ? this.First() : null;
         }
 
-        public string Description => "Encode to Mp4: H.264 with AAC audio using Media Foundation Hardware encoder";
+        public string Description => "使用 Media Foundation 硬件编码 MP4：H.264 视频和 AAC 音频。";
     }
 }

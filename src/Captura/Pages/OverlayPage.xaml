@@ -25,26 +25,26 @@
             <TabItem Header="{Binding Keystrokes, Source={StaticResource Loc}, Mode=OneWay}">
                 <Frame Source="../Pages/KeystrokesPage.xaml"/>
             </TabItem>
-            <TabItem Header="Mouse">
+            <TabItem Header="{Binding [Mouse], Source={StaticResource Loc}, Mode=OneWay}">
                 <Frame Source="../Pages/MouseOverlayPage.xaml"/>
             </TabItem>
-            <TabItem Header="Elapsed"
+            <TabItem Header="{Binding [Elapsed], Source={StaticResource Loc}, Mode=OneWay}"
                      DataContext="{Binding AboutViewModel, Source={StaticResource ServiceLocator}}">
                 <StackPanel DataContext="{Binding Settings.Elapsed}">
-                    <CheckBox Content="Display"
+                    <CheckBox Content="{Binding [Display], Source={StaticResource Loc}, Mode=OneWay}"
                               IsChecked="{Binding Display, Mode=TwoWay}"
                               Margin="0,5"/>
                     <local:TextOverlaySettingsControl Margin="5"
                                                       DockPanel.Dock="Bottom"/>
                 </StackPanel>
             </TabItem>
-            <TabItem Header="Censor">
+            <TabItem Header="{Binding [Censor], Source={StaticResource Loc}, Mode=OneWay}">
                 <Frame Source="../Pages/CensorOverlaysPage.xaml"/>
             </TabItem>
-            <TabItem Header="Text">
+            <TabItem Header="{Binding [Text], Source={StaticResource Loc}, Mode=OneWay}">
                 <Frame Source="../Pages/TextOverlaysPage.xaml"/>
             </TabItem>
-            <TabItem Header="Images">
+            <TabItem Header="{Binding [Images], Source={StaticResource Loc}, Mode=OneWay}">
                 <Frame Source="../Pages/ImageOverlaysPage.xaml"/>
             </TabItem>
         </TabControl>

@@ -2,20 +2,20 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:captura="clr-namespace:Captura"
-      Title="Image Overlays">
+      Title="{Binding [ImageOverlays], Source={StaticResource Loc}, Mode=OneWay}">
     <Grid>
         <DockPanel DataContext="{Binding CustomImageOverlays, Source={StaticResource ServiceLocator}}">
             <Label DockPanel.Dock="Top"
                    Margin="5,3"
-                   Content="Size of Preview considers Resize to be active"
+                   Content="{Binding [SizeofPreviewconsidersResizetobeactive], Source={StaticResource Loc}, Mode=OneWay}"
                    Opacity="0.8"/>
 
             <DockPanel DockPanel.Dock="Top">
-                <captura:ModernButton ToolTip="Add"
+                <captura:ModernButton ToolTip="{Binding [Add], Source={StaticResource Loc}, Mode=OneWay}"
                                       Command="{Binding AddCommand}"
                                       IconData="{Binding Icons.Add, Source={StaticResource ServiceLocator}}"/>
 
-                <Label Content="Add More"/>
+                <Label Content="{Binding [AddMore], Source={StaticResource Loc}, Mode=OneWay}"/>
             </DockPanel>
 
             <ListView Margin="5"
@@ -23,7 +23,7 @@
                       SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="Image"/>
+                        <TextBlock Text="{Binding [Image], Source={StaticResource Loc}, Mode=OneWay}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -38,17 +38,17 @@
                                                      DataContext="{Binding SelectedItem}"/>
 
                 <DockPanel DockPanel.Dock="Top">
-                    <captura:ModernButton ToolTip="Remove"
+                    <captura:ModernButton ToolTip="{Binding [Remove], Source={StaticResource Loc}, Mode=OneWay}"
                                           Command="{Binding RemoveCommand}"
                                           CommandParameter="{Binding SelectedItem}"
                                           IconData="{Binding Icons.Close, Source={StaticResource ServiceLocator}}"
                                           DockPanel.Dock="Right"/>
 
                     <CheckBox IsChecked="{Binding SelectedItem.Display, Mode=TwoWay}"
-                              Content="Display"/>
+                              Content="{Binding [Display], Source={StaticResource Loc}, Mode=OneWay}"/>
                 </DockPanel>
 
-                <Label Content="Source"
+                <Label Content="{Binding [Source], Source={StaticResource Loc}, Mode=OneWay}"
                        ContentStringFormat="{}{0}: "/>
 
                 <Button Content="..."

@@ -101,7 +101,7 @@ namespace Captura
 
                 var textBlock = new TextBlock
                 {
-                    Text = $"Select {_mode} or Press Esc to Cancel",
+                    Text = string.Format(Captura.Loc.LanguageManager.Instance["SelectSourceHint"], Captura.Loc.LanguageManager.Instance[_mode.ToString()]),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     Padding = new Thickness(10, 5, 10, 5),

@@ -291,7 +291,7 @@ namespace Captura
                 _isTrimming.Value = false;
             }
 
-            MessageBox.Show("Done");
+            MessageBox.Show(Captura.Loc.LanguageManager.Instance["Done"]);
         }
     }
 }

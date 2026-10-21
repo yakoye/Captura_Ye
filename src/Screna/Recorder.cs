@@ -63,7 +63,7 @@ namespace Captura.Video
             _cancellationToken = _cancellationTokenSource.Token;
 
             if (FrameRate <= 0)
-                throw new ArgumentException("Frame Rate must be possitive", nameof(FrameRate));
+                throw new ArgumentException("帧率必须大于 0", nameof(FrameRate));
 
             _frameRate = FrameRate;
 

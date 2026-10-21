@@ -21,7 +21,7 @@ namespace Captura.ViewModels
         readonly IMessageProvider _messageProvider;
         Task _uploadTask;
         string _fileName, _link, _title;
-        string _description = "\n\n\n\n--------------------------------------------------\n\nUploaded using Captura (https://mathewsachin.github.io/Captura/)";
+        string _description = "\n\n\n\n--------------------------------------------------\n\n使用 Captura Ye 中文版上传（https://github.com/yakoye/Captura_Ye）";
         YouTubePrivacyStatus _privacyStatus;
         int _progress;
         bool _beganUploading;
@@ -76,7 +76,7 @@ namespace Captura.ViewModels
             {
                 Link = L;
 
-                CancelBtnText = "Finish";
+                CancelBtnText = Captura.Loc.LanguageManager.Instance["Finish"];
             };
 
             _uploadRequest.BytesSent += B => Progress = (int)(B * 100 / fileSize);
@@ -100,11 +100,11 @@ namespace Captura.ViewModels
 
                 if (result.Status == UploadStatus.Failed)
                 {
-                    _messageProvider.ShowException(result.Exception, "Error Occured while Uploading");
+                    _messageProvider.ShowException(result.Exception, Captura.Loc.LanguageManager.Instance["ErrorOccuredwhileUploading"]);
 
                     _canUpload.Value = true;
 
-                    UploadBtnText = "Retry";
+                    UploadBtnText = Captura.Loc.LanguageManager.Instance["Retry"];
                 }
             }
             catch (TaskCanceledException)
@@ -118,7 +118,7 @@ namespace Captura.ViewModels
             // Began Uploading but not finished
             if (BeganUploading && Link == null)
             {
-                if (!_messageProvider.ShowYesNo("Are you sure you want to cancel upload?", "Cancel Upload"))
+                if (!_messageProvider.ShowYesNo(Captura.Loc.LanguageManager.Instance["Areyousureyouwanttocancelupload"], Captura.Loc.LanguageManager.Instance["CancelUpload"]))
                     return false;
             }
 
@@ -187,7 +187,7 @@ namespace Captura.ViewModels
         public ICommand OpenVideoCommand { get; }
         public ICommand CopyLinkCommand { get; }
 
-        string _uploadBtnText = "Upload", _cancelBtnText = "Cancel";
+        string _uploadBtnText = Captura.Loc.LanguageManager.Instance["Upload"], _cancelBtnText = Captura.Loc.LanguageManager.Instance["Cancel"];
 
         public string UploadBtnText
         {

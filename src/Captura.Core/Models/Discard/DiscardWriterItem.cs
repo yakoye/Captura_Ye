@@ -18,8 +18,8 @@
             return new DiscardWriter();
         }
 
-        public override string ToString() => "Preview";
+        public override string ToString() => Captura.Loc.LanguageManager.Instance["Preview"];
 
-        public string Description => "For testing purposes.";
+        public string Description => Captura.Loc.LanguageManager.Instance["Fortestingpurposes"];
     }
 }

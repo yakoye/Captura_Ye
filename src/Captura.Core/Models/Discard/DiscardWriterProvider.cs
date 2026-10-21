@@ -23,9 +23,9 @@ namespace Captura.Video
             return GetEnumerator();
         }
 
-        public string Name { get; } = "Preview Only";
+        public string Name { get; } = Captura.Loc.LanguageManager.Instance["PreviewOnly"];
 
-        public string Description => "For testing purposes.";
+        public string Description => Captura.Loc.LanguageManager.Instance["Fortestingpurposes"];
 
         public override string ToString() => Name;
 

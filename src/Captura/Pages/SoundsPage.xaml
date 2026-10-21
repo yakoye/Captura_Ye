@@ -17,7 +17,7 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Browse"/>
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="{Binding SoundKind}"
+                        <Label Content="{Binding SoundKind, Converter={StaticResource LocalizedTextConverter}}"
                                ContentStringFormat="{}{0}: "
                                Margin="5"/>
 
@@ -29,7 +29,7 @@
                             <xctk:WatermarkTextBox IsReadOnly="True"
                                                    IsEnabled="False"
                                                    Text="{Binding FileName}"
-                                                   Watermark="No Sound"/>
+                                                   Watermark="{Binding [NoSound], Source={StaticResource Loc}, Mode=OneWay}"/>
                         </Border>
 
                         <Button Grid.Column="2"

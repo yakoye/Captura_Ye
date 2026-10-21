@@ -28,11 +28,11 @@ namespace Captura.SharpAvi
         public int Quality { get; set; } = 70;
 
         /// <summary>Identifier used for non-compressed data.</summary>
-        public static AviCodec Uncompressed { get; } = new AviCodec(new FourCC(0), "Uncompressed");
+        public static AviCodec Uncompressed { get; } = new AviCodec(new FourCC(0), Captura.Loc.LanguageManager.Instance["Uncompressed"]);
 
         /// <summary>Motion JPEG.</summary>
-        public static AviCodec MotionJpeg { get; } = new AviCodec(new FourCC("MJPG"), "Motion Jpeg");
+        public static AviCodec MotionJpeg { get; } = new AviCodec(new FourCC("MJPG"), Captura.Loc.LanguageManager.Instance["MotionJpeg"]);
 
-        public static AviCodec Lagarith { get; } = new AviCodec(new FourCC("LAGS"), "Lagarith (Install Manually)");
+        public static AviCodec Lagarith { get; } = new AviCodec(new FourCC("LAGS"), Captura.Loc.LanguageManager.Instance["LagarithManual"]);
     }
 }

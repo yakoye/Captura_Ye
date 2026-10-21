@@ -25,7 +25,7 @@ namespace Captura.Video
 
         public override string Name => Loc.Region;
 
-        public override string Description { get; } = "Record region selected using Region Selector.";
+        public override string Description { get; } = Captura.Loc.LanguageManager.Instance["RecordRegionDescription"];
 
         public override string Icon { get; }
 

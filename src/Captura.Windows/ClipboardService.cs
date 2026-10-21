@@ -26,7 +26,7 @@ namespace Captura.Windows
             try { Clipboard.SetText(Text); }
             catch (ExternalException)
             {
-                _messageProvider?.ShowError($"Copy to Clipboard failed:\n\n{Text}");
+                _messageProvider?.ShowError($"复制到剪贴板失败：\n\n{Text}");
             }
         }
 

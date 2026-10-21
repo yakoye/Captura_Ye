@@ -82,7 +82,7 @@ namespace Captura.Audio
             lock (_syncLock)
             {
                 if (_riff && _writer.BaseStream.Length + Count > uint.MaxValue)
-                    throw new ArgumentException("WAV file too large", nameof(Count));
+                    throw new ArgumentException("WAV 文件过大", nameof(Count));
                 
                 _writer.Write(Data, Offset, Count);
                 Length += Count;

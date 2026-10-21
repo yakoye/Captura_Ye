@@ -25,6 +25,16 @@ namespace Captura.MouseKeyHook
             public string FileName { get; }
 
             public string Name { get; }
+
+            public string DisplayName
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(FileName)) return "无映射";
+                    try { return System.Globalization.CultureInfo.GetCultureInfo(Path.GetFileNameWithoutExtension(FileName)).DisplayName; }
+                    catch { return Name; }
+                }
+            }
         }
 
         public KeymapViewModel()
