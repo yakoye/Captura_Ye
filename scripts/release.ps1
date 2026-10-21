@@ -23,6 +23,30 @@ function Run([string]$Exe, [string[]]$Arguments) {
 function Require-Command([string]$Name) {
     if (!(Get-Command $Name -ErrorAction SilentlyContinue)) { throw "未找到 $Name，请先按 README.md 安装构建工具。" }
 }
+function Download-Release([string]$Tag, [string]$Destination) {
+    $originalDebug = $env:GODEBUG
+    try {
+        for ($attempt = 1; $attempt -le 3; $attempt++) {
+            $attemptDir = Join-Path $Destination "attempt-$attempt"
+            New-Item -ItemType Directory -Force -Path $attemptDir | Out-Null
+            if ($attempt -gt 1) {
+                # 仅为当前进程及子进程启用 HTTP/1.1，规避部分网络的 HTTP/2 EOF。
+                $debugParts = @($originalDebug -split ',' | Where-Object { $_ -and $_ -notmatch '^http2client=' })
+                $env:GODEBUG = (@($debugParts) + 'http2client=0') -join ','
+            }
+            try {
+                Run 'gh' @('release','download',$Tag,'--repo',$Repository,'--dir',$attemptDir) | Out-Host
+                return $attemptDir
+            } catch {
+                if ($attempt -eq 3) { throw }
+                Write-Host "回下载第 $attempt 次失败，保留该次文件和日志，改用 HTTP/1.1 重试。"
+                Start-Sleep -Seconds 2
+            }
+        }
+    } finally {
+        [Environment]::SetEnvironmentVariable('GODEBUG', $originalDebug, 'Process')
+    }
+}
 function Copy-Verified([string]$From, [string]$To) {
     if (Test-Path -LiteralPath $To) {
         if ((Get-FileHash -LiteralPath $From).Hash -ne (Get-FileHash -LiteralPath $To).Hash) { throw "同版本文件已存在且内容不同，未覆盖：$To。请使用新版本号。" }
@@ -66,7 +90,8 @@ try {
         if ($Publish) {
             $publishedJson = & gh release list --repo $Repository --limit 100 --json tagName
             if ($LASTEXITCODE -ne 0) { throw '无法读取远程发行版，未修改版本号。' }
-            $published += @($publishedJson | ConvertFrom-Json | ForEach-Object tagName)
+            $publishedReleases = ConvertFrom-Json -InputObject ($publishedJson -join "`n")
+            $published += @($publishedReleases | ForEach-Object tagName)
         }
         while ($published -contains "v$nextVersion") {
             $v = [version]$nextVersion
@@ -196,14 +221,30 @@ try {
         Run 'git' @('-c','credential.helper=','-c','credential.helper=!gh auth git-credential','-c','credential.interactive=false','push','publish','HEAD:refs/heads/master',"refs/tags/$tag")
         $releases = & gh release list --repo $Repository --limit 100 --json tagName,isDraft
         if ($LASTEXITCODE -ne 0) { throw '无法查询发行版。' }
-        $existing = @($releases | ConvertFrom-Json | Where-Object tagName -EQ $tag)
+        # Windows PowerShell 5.1 不枚举 ConvertFrom-Json 返回的数组，先赋值再筛选。
+        $parsedReleases = ConvertFrom-Json -InputObject ($releases -join "`n")
+        $existing = @($parsedReleases | Where-Object { $_.tagName -eq $tag })
+        if ($existing.Count -gt 1) { throw '同一版本存在多个发行草稿，已停止，避免选择错误的草稿。' }
         $assets = @(Get-ChildItem -LiteralPath $releaseDir -File | ForEach-Object FullName)
         if (!$existing.Count) {
             Run 'gh' (@('release','create',$tag,'--repo',$Repository,'--draft','--verify-tag','--title',"Captura Ye 中文版 $tag",'--notes-file',(Join-Path $releaseDir 'release-notes.md')) + $assets)
+        } else {
+            $remoteJson = & gh release view $tag --repo $Repository --json assets
+            if ($LASTEXITCODE -ne 0) { throw '无法核对已有发行版资产。' }
+            $remoteAssets = (ConvertFrom-Json -InputObject ($remoteJson -join "`n")).assets
+            foreach ($asset in $assets) {
+                $assetName = Split-Path $asset -Leaf
+                $matching = @($remoteAssets | Where-Object { $_.name -eq $assetName })
+                if (!$matching.Count) { Run 'gh' @('release','upload',$tag,$asset,'--repo',$Repository) }
+                elseif ($matching.Count -ne 1 -or $matching[0].size -ne (Get-Item -LiteralPath $asset).Length -or
+                    ($matching[0].digest -and $matching[0].digest -ne ('sha256:' + (Get-FileHash -LiteralPath $asset).Hash.ToLowerInvariant()))) {
+                    throw "已有发行资产内容冲突，未覆盖：$assetName"
+                }
+            }
         }
         $downloadDir = Join-Path $logRoot 'github-download'
         New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
-        Run 'gh' @('release','download',$tag,'--repo',$Repository,'--dir',$downloadDir)
+        $downloadDir = Download-Release $tag $downloadDir
         foreach ($asset in $assets) {
             $remoteFile = Join-Path $downloadDir (Split-Path $asset -Leaf)
             if (!(Test-Path -LiteralPath $remoteFile) -or (Get-Item -LiteralPath $remoteFile).Length -ne (Get-Item -LiteralPath $asset).Length -or (Get-FileHash -LiteralPath $remoteFile).Hash -ne (Get-FileHash -LiteralPath $asset).Hash) { throw "GitHub 回下载校验失败：$asset" }

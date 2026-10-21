@@ -6,4 +6,4 @@
 [assembly: AssemblyProduct("Captura.Console")]
 [assembly: AssemblyCopyright("(c) 2018 Mathew Sachin")]
 [assembly: AssemblyTrademark("Captura.Console")]
-[assembly: AssemblyVersion("9.0.7.0")]
+[assembly: AssemblyVersion("9.0.8.0")]
