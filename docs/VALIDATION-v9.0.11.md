@@ -36,4 +36,6 @@
 
 使用既有 `build.cmd`、`release.cmd` 与 `scripts/release.ps1`，上传后回下载全部 5 个资产并校验大小和 SHA-256，再公开，最后归档本地与 NAS。保留历史版本、不覆盖冲突文件。
 
-预定版本目录：`C:\Users\color\Downloads\yakoye-release\Captura_Ye\v9.0.11` 与 `\\192.168.7.100\Downloads\yakoye-release\Captura_Ye\v9.0.11`。以 `publish-v911-pipeline.log` 和 GitHub 当前状态作为发布与归档完成证据。
+发布提交及标签：`636ba853` / `v9.0.11`。`publish-v911-pipeline.log` 及 `temp/logs/20261021-172018` 记录完整成功流程，全部资产回下载并核对大小和 SHA-256 后公开，现场查询确认 `isDraft=false`：[正式发行版](https://github.com/yakoye/Captura_Ye/releases/tag/v9.0.11)。
+
+两个版本目录均已归档完成：`C:\Users\color\Downloads\yakoye-release\Captura_Ye\v9.0.11` 与 `\\192.168.7.100\Downloads\yakoye-release\Captura_Ye\v9.0.11`。两处各 5 个文件（安装 EXE、便携 ZIP、构建信息、发行说明、校验清单），发布脚本校验后另行再次比较，均与源文件大小及 SHA-256 一致。
