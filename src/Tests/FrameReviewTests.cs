@@ -60,6 +60,19 @@ namespace Captura.Tests
                     var preview = await service.ReadFrameAsync(media, frames[i], CancellationToken.None);
                     Assert.Equal(File.ReadAllBytes(Path.Combine(output, $"frame-{i + 1:000000}.png")), preview);
                 }
+                if (format == "gif") {
+                    using var gif = new GifPlayback(file);
+                    Assert.Equal(media.Times.Length, gif.FrameCount);
+                    // 检查向后、向前随机定位与 FFmpeg 导出画面一致，覆盖原生 GIF 解码和资源释放。
+                    foreach (var i in new[] { 2, 0, 1 }) {
+                        using var actualStream = new MemoryStream(gif.ReadFrame(frames[i]));
+                        using var actual = new System.Drawing.Bitmap(actualStream);
+                        using var expected = new System.Drawing.Bitmap(Path.Combine(output, $"frame-{i + 1:000000}.png"));
+                        Assert.Equal(expected.Size, actual.Size);
+                        for (var y = 0; y < actual.Height; y++)
+                            for (var x = 0; x < actual.Width; x++) Assert.Equal(expected.GetPixel(x, y).ToArgb(), actual.GetPixel(x, y).ToArgb());
+                    }
+                }
                 Assert.Contains(kind == "vfr" ? "frame-000002.png,2,0.1" : "frame-000002.png,5,0.4", File.ReadAllText(Path.Combine(output, "frames.csv")));
                 var result = await service.OpenAsync(Path.Combine(output, "selected." + format), CancellationToken.None);
                 Assert.Equal(3, result.Times.Length);

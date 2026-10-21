@@ -23,7 +23,7 @@
    </Grid>
   </Border>
   <StackPanel Grid.Row="2">
-   <Slider x:Name="Timeline" Minimum="0" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；播放模式左右键按秒移动，选帧模式左右键逐帧"/>
+   <Slider x:Name="Timeline" Minimum="0" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；播放模式左右键按秒移动，选帧模式左右键逐帧"/>
    <CheckBox x:Name="FrameMode" Content="选帧模式（← → 逐帧，空格选中）" Checked="Mode_Changed" Unchecked="Mode_Changed" Margin="0,3"/>
    <WrapPanel VerticalAlignment="Center">
     <Button Content="上一帧 ←" Click="Previous_Click" Padding="4,2"/>

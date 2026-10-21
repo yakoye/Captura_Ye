@@ -33,7 +33,7 @@ FFmpeg 会在后台自动查找：优先保留有效配置，否则先检查 PAT
 
 “导出到”首次默认使用源文件旁的 `Captura-exports`，也可更改目录；成功导出后记住该位置。每次创建独立子目录，保留之前的输出。“打开导出目录”可直接定位；取消处理会保留已经产生的文件。
 
-媒体预览和抽帧使用自动发现的 FFmpeg。优先通过同目录或 PATH 中的 ffprobe 建立真实帧索引；没有 ffprobe 时会后台顺序扫描，较长文件需要等待，可取消。GIF 播放会先准备临时播放文件，逐帧和导出仍读取原 GIF。系统缺少某视频编码的播放组件时，会提示不能连续播放，仍可逐帧查看和导出。
+媒体预览和抽帧使用自动发现的 FFmpeg。优先通过同目录或 PATH 中的 ffprobe 建立真实帧索引；没有 ffprobe 时会后台顺序扫描，较长文件需要等待，可取消。GIF 直接使用 Windows 原生图像解码播放，逐帧和导出仍读取原 GIF，不依赖系统视频解码器。系统缺少某视频编码的播放组件时，会提示不能连续播放，仍可逐帧查看和导出。
 
 - 安装版：运行 `CapturaYe-v版本号-Setup.exe`。
 - 便携版：将 `CapturaYe-v版本号-Portable.zip` **完整解压**，运行 `CapturaYe/captura.exe`。请保留同目录中的 `lib`、`Languages`、`Settings` 和配置文件。
@@ -60,7 +60,7 @@ FFmpeg 会在后台自动查找：优先保留有效配置，否则先检查 PAT
 
 ```powershell
 # 指定版本编译、测试和打包
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1 -Version 9.0.2
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1 -Version 9.0.3
 
 # 发布已经验证的现有包，不重新编译
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1 -Publish -Archive -ReusePackage

@@ -26,7 +26,9 @@ namespace Captura
         readonly DispatcherTimer _timer;
         readonly Dictionary<int, BitmapSource> _cache = new Dictionary<int, BitmapSource>();
         readonly SortedSet<int> _selected = new SortedSet<int>();
-        readonly string _temp = Path.Combine(Path.GetTempPath(), "CapturaYe-review", Guid.NewGuid().ToString("N"));
+        GifPlayback _gif;
+        readonly Stopwatch _gifClock = new Stopwatch();
+        double _gifStartTime;
         int _index, _rangeStart, _displayedIndex = -1;
         bool _updating, _playing, _disposed, _playerReady;
         string _output;
@@ -36,8 +38,21 @@ namespace Captura
             InitializeComponent();
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
             _timer.Tick += (_, __) => {
-                if (!_playing || !_playerReady || _media == null) return;
-                _index = _media.FrameAt(Player.Position.TotalSeconds);
+                if (!_playing || _media == null) return;
+                if (_gif != null) {
+                    var time = _gifStartTime + _gifClock.Elapsed.TotalSeconds;
+                    if (time >= _media.Duration) { Pause(); _index = _media.Times.Length - 1; Step(0); return; }
+                    var index = _media.FrameAt(time);
+                    if (index != _displayedIndex) {
+                        try { Still.Source = DecodeBitmap(_gif.ReadFrame(index)); _displayedIndex = index; }
+                        catch (Exception e) { Pause(); Status.Text = "GIF 播放失败：" + e.Message; }
+                    }
+                    _index = index;
+                }
+                else {
+                    if (!_playerReady) return;
+                    _index = _media.FrameAt(Player.Position.TotalSeconds);
+                }
                 UpdatePosition();
             };
         }
@@ -50,7 +65,8 @@ namespace Captura
             _load?.Cancel(); _frame?.Cancel();
             var load = new CancellationTokenSource();
             _load = load;
-            Pause(); Player.Close(); Still.Source = null; _cache.Clear();
+            Pause(); Player.Close(); Player.Source = null; Still.Source = null; _cache.Clear();
+            _gif?.Dispose(); _gif = null;
             _media = null; _selected.Clear(); RefreshSelection();
             _displayedIndex = -1; _index = _rangeStart = 0;
             FrameMode.IsChecked = false;
@@ -64,20 +80,16 @@ namespace Captura
                 if (executable == null) throw new IOException("未找到 FFmpeg，请到设置中的 FFmpeg 页面自动检测或指定目录。");
                 var service = new FrameReviewService(executable);
                 var media = await service.OpenAsync(file, load.Token);
-                var playback = file;
-                if (Path.GetExtension(file).Equals(".gif", StringComparison.OrdinalIgnoreCase))
-                {
-                    Status.Text = "正在准备 GIF 播放；逐帧查看和导出保留原始 GIF 帧。";
-                    Directory.CreateDirectory(_temp);
-                    playback = Path.Combine(_temp, Guid.NewGuid().ToString("N") + ".mp4");
-                    await service.PrepareGifPlaybackAsync(file, playback, load.Token);
-                }
                 load.Token.ThrowIfCancellationRequested();
                 _service = service; _media = media;
                 var preferred = ServiceProvider.Get<Settings>().FrameExportFolder;
                 OutputRoot.Text = string.IsNullOrWhiteSpace(preferred) ? Path.Combine(Path.GetDirectoryName(media.FilePath), "Captura-exports") : preferred;
                 _playerReady = false;
-                Player.Source = new Uri(Path.GetFullPath(playback)); Player.Pause();
+                if (Path.GetExtension(file).Equals(".gif", StringComparison.OrdinalIgnoreCase)) {
+                    _gif = new GifPlayback(file);
+                    if (_gif.FrameCount != media.Times.Length) throw new IOException("GIF 帧索引与解码器不一致，无法播放。");
+                }
+                else { Player.Source = new Uri(Path.GetFullPath(file)); Player.Pause(); }
                 Timeline.Maximum = media.Times.Length - 1;
                 EmptyHint.Visibility = Visibility.Collapsed;
                 ExportFps.Text = Math.Max(1, Math.Min(60, Math.Round(media.Times.Length / media.Duration, 3))).ToString(CultureInfo.InvariantCulture);
@@ -110,8 +122,7 @@ namespace Captura
                 if (!_cache.TryGetValue(index, out var bitmap))
                 {
                     var bytes = await _service.ReadFrameAsync(media, index, request.Token);
-                    using var stream = new MemoryStream(bytes);
-                    var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad; image.StreamSource = stream; image.EndInit(); image.Freeze();
+                    var image = DecodeBitmap(bytes);
                     bitmap = image;
                     // 按解码后的图像大小限制缓存，避免 4K 逐帧耗尽内存。
                     var capacity = Math.Max(2, Math.Min(32, 64 * 1024 * 1024 / Math.Max(1L, (long)image.PixelWidth * image.PixelHeight * 4)));
@@ -136,7 +147,9 @@ namespace Captura
         public void Suspend() { Pause(); _frame?.Cancel(); }
         void Pause()
         {
-            _playing = false; _timer.Stop(); Player.Pause(); PlayButton.Content = "播放";
+            _playing = false; _timer.Stop(); _gifClock.Stop();
+            if (_gif == null) Player.Pause();
+            PlayButton.Content = "播放";
         }
         void TogglePlay()
         {
@@ -144,8 +157,13 @@ namespace Captura
             if (_playing) { Pause(); Step(0); return; }
             _frame?.Cancel();
             if (_index == _media.Times.Length - 1) _index = 0;
-            Still.Visibility = Visibility.Collapsed;
             _playing = true; PlayButton.Content = "暂停";
+            if (_gif != null) {
+                Still.Visibility = Visibility.Visible;
+                Still.Source = DecodeBitmap(_gif.ReadFrame(_index)); _displayedIndex = _index;
+                _gifStartTime = _media.Times[_index]; _gifClock.Restart(); _timer.Start(); return;
+            }
+            Still.Visibility = Visibility.Collapsed;
             Player.Play();
             if (_playerReady) Player.Position = TimeSpan.FromSeconds(_media.Times[_index]);
             _timer.Start();
@@ -184,7 +202,7 @@ namespace Captura
         {
             if (_media == null || _load != null) return;
             var resume = _playing;
-            var time = _playing ? Player.Position.TotalSeconds : _media.Times[_index];
+            var time = _playing ? (_gif != null ? _gifStartTime + _gifClock.Elapsed.TotalSeconds : Player.Position.TotalSeconds) : _media.Times[_index];
             Pause(); _index = _media.FrameAt(Math.Max(0, Math.Min(_media.Duration, time + seconds)));
             if (resume && _index < _media.Times.Length - 1) TogglePlay(); else Step(0);
             UpdatePosition();
@@ -233,13 +251,20 @@ namespace Captura
         void Preview_MouseDown(object sender, MouseButtonEventArgs e) { Focus(); e.Handled = true; }
         void Player_Opened(object sender, RoutedEventArgs e)
         {
+            if (_gif != null) return;
             _playerReady = true;
             if (_media == null) return;
             Player.Position = TimeSpan.FromSeconds(_media.Times[_index]);
             if (!_playing) Player.Pause();
         }
-        void Player_Ended(object sender, RoutedEventArgs e) { Pause(); if (_media != null) { _index = _media.Times.Length - 1; Step(0); } }
-        void Player_Failed(object sender, ExceptionRoutedEventArgs e) { Pause(); Status.Text = "系统播放器无法播放此编码；仍可使用左右键逐帧查看和导出。"; Step(0); }
+        static BitmapImage DecodeBitmap(byte[] bytes)
+        {
+            using var stream = new MemoryStream(bytes);
+            var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad; image.StreamSource = stream; image.EndInit(); image.Freeze();
+            return image;
+        }
+        void Player_Ended(object sender, RoutedEventArgs e) { if (_gif != null) return; Pause(); if (_media != null) { _index = _media.Times.Length - 1; Step(0); } }
+        void Player_Failed(object sender, ExceptionRoutedEventArgs e) { if (_gif != null) return; Pause(); Status.Text = "系统播放器无法播放此编码；仍可使用左右键逐帧查看和导出。"; Step(0); }
         void SetBusy(bool busy) { CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; ExportBar.IsEnabled = !busy; }
         void Cancel_Click(object sender, RoutedEventArgs e) { _load?.Cancel(); _export?.Cancel(); Status.Text = "已请求取消；已导出的文件会保留。"; }
         async void ExportPng_Click(object sender, RoutedEventArgs e) => await ExportAsync("png");
@@ -281,8 +306,7 @@ namespace Captura
         {
             _disposed = true; _load?.Cancel(); _frame?.Cancel(); _export?.Cancel();
             _timer.Stop(); Player.Close(); Still.Source = null; _cache.Clear();
-            // 只删除本实例创建的缓存目录。
-            try { if (Directory.Exists(_temp)) Directory.Delete(_temp, true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+            _gif?.Dispose(); _gif = null;
         }
     }
 }

@@ -83,9 +83,6 @@ namespace Captura.FFmpeg
             return await RunBytesAsync(_ffmpeg, "-v error -nostdin -ss " + seek + " -i " + Quote(media.FilePath) + " -map 0:v:0 -frames:v 1 -f image2pipe -c:v png -", token);
         }
 
-        public Task<string> PrepareGifPlaybackAsync(string file, string output, CancellationToken token) =>
-            RunAsync(_ffmpeg, "-v error -nostdin -n -i " + Quote(file) + " -an -vf \"pad=ceil(iw/2)*2:ceil(ih/2)*2\" -c:v libx264 -pix_fmt yuv420p -movflags +faststart " + Quote(output), token);
-
         public static int[] NormalizeSelection(IEnumerable<int> frames, int count)
         {
             var result = frames.Distinct().OrderBy(n => n).ToArray();
