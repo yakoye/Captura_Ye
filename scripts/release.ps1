@@ -183,7 +183,8 @@ try {
         if ($localTag) {
             if ((& git rev-list -n 1 $tag).Trim() -ne $commit) { throw '该版本标签已指向其他提交，请更新版本号。' }
         } else { Run 'git' @('tag','-a',$tag,'-m',"Captura Ye 中文版 $tag") }
-        Run 'git' @('push','publish','HEAD:refs/heads/master',"refs/tags/$tag")
+        # 本次推送单独使用已登录的 gh，不弹出凭据管理器登录窗口。
+        Run 'git' @('-c','credential.helper=','-c','credential.helper=!gh auth git-credential','-c','credential.interactive=false','push','publish','HEAD:refs/heads/master',"refs/tags/$tag")
         $releases = & gh release list --repo $Repository --limit 100 --json tagName,isDraft
         if ($LASTEXITCODE -ne 0) { throw '无法查询发行版。' }
         $existing = @($releases | ConvertFrom-Json | Where-Object tagName -EQ $tag)
