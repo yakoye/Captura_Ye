@@ -66,10 +66,7 @@
      </Border>
     </Popup>
    </StackPanel>
-   <StackPanel>
-    <TextBlock Text="媒体回看与选帧" FontSize="18" FontWeight="SemiBold"/>
-    <TextBlock x:Name="FileLabel" Text="录制完成自动载入，也可拖入视频或 GIF" TextTrimming="CharacterEllipsis" FontSize="11" Opacity="0.7" Margin="0,3,0,0"/>
-   </StackPanel>
+   <TextBlock x:Name="FileLabel" Text="录制完成自动载入，也可拖入视频或 GIF" TextTrimming="CharacterEllipsis" FontSize="12" Opacity="0.7" VerticalAlignment="Center"/>
   </DockPanel>
   <Grid Grid.Row="1">
    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="248"/></Grid.ColumnDefinitions>
@@ -87,7 +84,14 @@
      </Grid>
     </Border>
     <StackPanel Grid.Row="1" Margin="0,8,0,0">
-     <Slider x:Name="Timeline" Minimum="0" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；查看位置不会清除已选帧" Margin="0,0,0,6"/>
+     <Grid Margin="0,0,0,6">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <StackPanel VerticalAlignment="Center" ToolTip="帧号；当前时间 / 总时间">
+       <TextBlock x:Name="FrameNumberLabel" Text="0 / 0 帧" FontSize="11"/>
+       <TextBlock x:Name="PositionLabel" Text="00:00:00.000 / 00:00:00.000" FontSize="11" Margin="0,2,0,0"/>
+      </StackPanel>
+      <Slider Grid.Column="1" x:Name="Timeline" Minimum="0" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；查看位置不会清除已选帧" VerticalAlignment="Center" Margin="12,0,0,0"/>
+     </Grid>
      <DockPanel LastChildFill="True">
       <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
        <Button Style="{StaticResource TransportButton}" Click="First_Click" ToolTip="第一帧" AutomationProperties.Name="第一帧">
@@ -120,7 +124,6 @@
       </StackPanel>
       <CheckBox x:Name="FrameMode" Content="逐帧模式" Checked="Mode_Changed" Unchecked="Mode_Changed" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="8,0" ToolTip="开启：左右键逐帧；关闭：左右键按 1 秒移动"/>
      </DockPanel>
-     <TextBlock x:Name="PositionLabel" Text="当前查看：尚未载入文件" FontSize="12" Margin="0,7,0,0"/>
     </StackPanel>
    </Grid>
    <Border Grid.Column="2" Background="#0D64748B" BorderBrush="#2864748B" BorderThickness="1" CornerRadius="8" Padding="14">

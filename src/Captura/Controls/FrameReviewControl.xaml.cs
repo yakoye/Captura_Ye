@@ -123,7 +123,8 @@ namespace Captura
             if (_media == null) return;
             _selection.View(_index);
             _updating = true; Timeline.Value = _index; _updating = false;
-            PositionLabel.Text = $"当前查看：第 {_index + 1} / {_media.Times.Length} 帧 · {TimeSpan.FromSeconds(_media.Times[_index]):hh\\:mm\\:ss\\.fff}";
+            FrameNumberLabel.Text = $"{_index + 1} / {_media.Times.Length} 帧";
+            PositionLabel.Text = $"{TimeSpan.FromSeconds(_media.Times[_index]):hh\\:mm\\:ss\\.fff} / {TimeSpan.FromSeconds(_media.Duration):hh\\:mm\\:ss\\.fff}";
             if (_currentTile != _index && _tiles.Count > _index) {
                 if (_currentTile >= 0 && _currentTile < _tiles.Count) _tiles[_currentTile].IsCurrent = false;
                 _tiles[_index].IsCurrent = true; _currentTile = _index;

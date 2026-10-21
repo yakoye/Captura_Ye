@@ -109,3 +109,5 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/archive-release.
 图标来自 [Material Design Icons](https://github.com/Templarian/MaterialDesign-SVG)，没有手工绘制；来源和许可随分发包提供。缩略图左上仅显示帧号数字，右上为独立勾选框，下方为时间。橙色“查看中”位于图片底部，查看与导出选择保持独立。
 
 点击回看工作区右上角的问号查看多选和快捷键说明；底部不再常驻显示操作说明，仅在处理、完成或出错时显示实际状态。帧卡片贴合内容，缩短下方留白。
+
+进度条左侧显示帧号，以及当前时间 / 总时间；下方只保留播放图标栏。
