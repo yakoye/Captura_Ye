@@ -11,6 +11,69 @@ namespace Captura.Tests
     public class FrameReviewTests
     {
         [Fact]
+        public void ClickingAnyFullyVisibleFrameKeepsItsScreenPosition()
+        {
+            for (var frame = 17; frame <= 22; frame++) Assert.Equal(17, FrameViewport.Reveal(frame, 17, 6.7, 400));
+        }
+        [Fact]
+        public void KeyboardSelectionTravelsAcrossViewportBeforeFollowingEitherEdge()
+        {
+            var selection = new FrameSelection(); selection.Reset(400); selection.Click(20, false, false);
+            double offset = 17;
+            for (var frame = 21; frame <= 35; frame++) {
+                selection.Click(frame, false, false); selection.View(selection.SelectionPreview(frame));
+                offset = FrameViewport.Reveal(selection.Current, offset, 6, 400);
+                Assert.Equal(new[] { frame }, selection.Snapshot());
+                Assert.Equal(Math.Max(17, frame - 5), offset);
+            }
+            Assert.Equal(30, offset);
+            for (var frame = 34; frame >= 10; frame--) {
+                selection.Click(frame, false, false); selection.View(selection.SelectionPreview(frame));
+                offset = FrameViewport.Reveal(selection.Current, offset, 6, 400);
+                Assert.Equal(new[] { frame }, selection.Snapshot());
+                Assert.Equal(Math.Min(30, frame), offset);
+            }
+        }
+        [Fact]
+        public void ViewportHandlesPartialCardsAndMediaBoundariesWithoutRecentering()
+        {
+            Assert.Equal(0, FrameViewport.Reveal(0, 0, 6.7, 400));
+            Assert.Equal(1, FrameViewport.Reveal(6, 0, 6.7, 400));
+            Assert.Equal(393.3, FrameViewport.Reveal(399, 393, 6.7, 400), 5);
+            Assert.Equal(0, FrameViewport.Reveal(0, 393, 6.7, 400));
+            Assert.Equal(0, FrameViewport.Reveal(2, 0, 6.7, 3));
+            Assert.Equal(17, FrameViewport.Reveal(20, 17, 0, 400));
+        }
+        [Fact]
+        public void MultiSelectionPreviewUsesFirstChronologicalFrameAndUpdatesAfterRemoval()
+        {
+            var selection = new FrameSelection(); selection.Reset(400);
+            selection.Click(19, false, false); Assert.Equal(19, selection.SelectionPreview(0));
+            selection.Toggle(30); Assert.Equal(19, selection.SelectionPreview(30));
+            selection.Toggle(4); Assert.Equal(4, selection.SelectionPreview(4));
+            selection.Toggle(4); Assert.Equal(19, selection.SelectionPreview(4));
+            selection.Toggle(19); Assert.Equal(30, selection.SelectionPreview(19));
+            selection.Toggle(30); Assert.Equal(30, selection.SelectionPreview(30));
+            selection.SelectAll(); Assert.Equal(0, selection.SelectionPreview(30));
+        }
+        [Fact]
+        public void RangeKeyboardCursorSurvivesPreviewingFirstSelectedFrame()
+        {
+            var selection = new FrameSelection(); selection.Reset(100); selection.Click(20, false, false);
+            for (var end = 21; end <= 25; end++) {
+                selection.SelectRange(selection.Anchor, selection.RangeEnd + 1, false);
+                selection.View(selection.SelectionPreview(selection.RangeEnd));
+                Assert.Equal(end, selection.RangeEnd); Assert.Equal(20, selection.Current);
+                Assert.Equal(Enumerable.Range(20, end - 19), selection.Snapshot());
+            }
+            selection.SelectRange(selection.Anchor, selection.RangeEnd - 1, false);
+            selection.View(selection.SelectionPreview(selection.RangeEnd));
+            Assert.Equal(24, selection.RangeEnd); Assert.Equal(20, selection.Anchor); Assert.Equal(20, selection.Current);
+            selection.SelectRange(selection.Anchor, 18, false); selection.View(selection.SelectionPreview(18));
+            Assert.Equal(new[] { 18, 19, 20 }, selection.Snapshot()); Assert.Equal(18, selection.Current);
+            selection.Click(19, false, false); Assert.Equal(new[] { 19 }, selection.Snapshot());
+        }
+        [Fact]
         public void ControlClickKeepsArbitraryDiscreteFramesAndCanRemoveOne()
         {
             var selection = new FrameSelection(); selection.Reset(100);

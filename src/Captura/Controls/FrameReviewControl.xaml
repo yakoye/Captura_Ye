@@ -147,12 +147,12 @@
        <TextBlock Text="选择帧" FontWeight="SemiBold"/>
        <TextBlock Text="单击缩略图：单选；Ctrl 单击：增减离散帧；Shift 单击：连续选择；Ctrl+Shift 单击：追加连续范围。右上角勾选框直接增减单帧，也支持 Shift 连选。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="播放与定位" FontWeight="SemiBold"/>
-       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。左右键沿用最近点击的 1 帧 / 1 秒 / 5 秒按钮步长；六个步进按钮支持按住连续移动。逐帧开关仍可手动切换，Shift+左右键可按 5 秒移动。拖动进度条会持续更新画面。查看与播放不会清除选择。" TextWrapping="Wrap" Margin="0,4,0,12"/>
+       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。左右键沿用最近点击的 1 帧 / 1 秒 / 5 秒按钮步长；六个步进按钮支持按住连续移动。逐帧开关仍可手动切换，Shift+左右键可按 5 秒移动。拖动进度条会持续更新画面。普通左右键移动单选；Shift+左右键扩展范围，Ctrl+Shift 追加范围。多选后预览时间顺序第一帧，播放与拖动不清除选择。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="快捷键与导出" FontWeight="SemiBold"/>
        <TextBlock Text="预览或时间轴内：空格播放 / 暂停；Ctrl+Enter 增减当前帧；Ctrl+A 全选；Ctrl+Shift+A 清空；Home / End 定位首尾。输入框保留原有键盘行为。" TextWrapping="Wrap" Margin="0,4,0,8"/>
        <TextBlock Text="在右侧选择图片、视频或 GIF，然后导出所选帧。按原时间顺序导出，视频和 GIF 不含音频；完成后可打开导出目录。左上数字是帧号，橙色标记是当前查看，勾选蓝底是导出选择。" TextWrapping="Wrap"/>
        <TextBlock Text="帧编辑" FontWeight="SemiBold" Margin="0,12,0,4"/>
-       <TextBlock Text="移除重复作用于整个时间轴，按原尺寸像素比较，100% 须完全相同，保留每组首帧。Delete 删除选中；Ctrl+Z 撤销，Ctrl+Y 重做。删除或减少帧数会缩短时长，操作和撤销后需重新选帧；原文件保留。编辑后视频预览及合成针对画面，不含音频。查看帧尽量固定在第二张，首尾除外。" TextWrapping="Wrap"/>
+       <TextBlock Text="移除重复作用于整个时间轴，按原尺寸像素比较，100% 须完全相同，保留每组首帧。Delete 删除选中；Ctrl+Z 撤销，Ctrl+Y 重做。删除或减少帧数会缩短时长，操作和撤销后需重新选帧；原文件保留。编辑后视频预览及合成针对画面，不含音频。当前帧在可见范围内保持原位置，走到左右边缘后才滚动跟随。" TextWrapping="Wrap"/>
 
       </StackPanel></ScrollViewer>
      </Border>

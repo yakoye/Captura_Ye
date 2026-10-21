@@ -13,11 +13,13 @@ namespace Captura
         public int FrameCount { get; private set; }
         public int Current { get; private set; }
         public int Anchor { get; private set; }
+        public int RangeEnd { get; private set; }
+        public int SelectionPreview(int fallback) { Validate(fallback); return Count > 0 ? _selected.Min : fallback; }
 
         public void Reset(int frameCount)
         {
             if (frameCount < 0) throw new ArgumentOutOfRangeException(nameof(frameCount));
-            FrameCount = frameCount; Current = Anchor = 0; _selected.Clear();
+            FrameCount = frameCount; Current = Anchor = RangeEnd = 0; _selected.Clear();
         }
         void Validate(int frame)
         {
@@ -29,22 +31,22 @@ namespace Captura
         {
             Validate(frame);
             if (!_selected.Remove(frame)) _selected.Add(frame);
-            Current = Anchor = frame;
+            Current = Anchor = RangeEnd = frame;
         }
         public void Click(int frame, bool control, bool shift)
         {
             Validate(frame);
             if (shift) SelectRange(Anchor, frame, control);
             else if (control) Toggle(frame);
-            else { _selected.Clear(); _selected.Add(frame); Current = Anchor = frame; }
+            else { _selected.Clear(); _selected.Add(frame); Current = Anchor = RangeEnd = frame; }
         }
-        public void SetAnchor(int frame) { Validate(frame); Anchor = frame; }
+        public void SetAnchor(int frame) { Validate(frame); Anchor = RangeEnd = frame; }
         public void SelectRange(int from, int to, bool add)
         {
             Validate(from); Validate(to);
             if (!add) _selected.Clear();
             for (var i = Math.Min(from, to); i <= Math.Max(from, to); i++) _selected.Add(i);
-            Current = to;
+            Current = RangeEnd = to;
         }
         public void SelectAll() { for (var i = 0; i < FrameCount; i++) _selected.Add(i); }
         public void Clear() => _selected.Clear();
