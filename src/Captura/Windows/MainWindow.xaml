@@ -6,8 +6,8 @@
         DataContext="{Binding MainViewModel, Source={StaticResource ServiceLocator}}"
         ResizeMode="CanResize"
         Icon="../Images/Captura.ico"
-        SizeToContent="Height"
-        MinWidth="440" Width="640" MaxWidth="1400"
+        SizeToContent="Manual"
+        MinWidth="900" Width="1120" Height="850" MinHeight="720"
         Title="Captura"
         Left="{Binding Settings.UI.MainWindowLeft, Mode=TwoWay}"
         Top="{Binding Settings.UI.MainWindowTop, Mode=TwoWay}"
@@ -201,7 +201,7 @@
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
-        <Expander Padding="5,0,0,0"
+        <Expander x:Name="MainExpander" Expanded="Main_Expanded" Collapsed="Main_Collapsed" Padding="5,0,0,0"
                   Grid.Row="0"
                   IsExpanded="{Binding Settings.UI.Expanded}">
             <Expander.Header>
@@ -271,25 +271,28 @@
                     </DockPanel>
                 </Grid>
             </Expander.Header>
-            <DockPanel Margin="-5,0"
-                       Height="620">
-                <Border DockPanel.Dock="Bottom" Margin="8,4" Padding="6" BorderThickness="1"
-                        BorderBrush="{DynamicResource Accent}"
+            <DockPanel Margin="-5,0">
+                <Border DockPanel.Dock="Bottom" Margin="10,4" Padding="10,7" BorderThickness="1" CornerRadius="6"
+                        BorderBrush="#3864748B"
                         Visibility="{Binding RecordingViewModel.HasSavedRecording, Source={StaticResource ServiceLocator}, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <StackPanel>
-                        <TextBlock Text="{Binding [SavedFileLocation], Source={StaticResource Loc}, Mode=OneWay}"/>
-                        <TextBlock Text="{Binding RecordingViewModel.LastSavedFile, Source={StaticResource ServiceLocator}}"
-                                   TextWrapping="Wrap" Margin="0,4" FontSize="11"/>
-                        <WrapPanel>
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
                             <Button Content="{Binding [OpenFile], Source={StaticResource Loc}, Mode=OneWay}"
-                                    Command="{Binding RecordingViewModel.OpenSavedFileCommand, Source={StaticResource ServiceLocator}}" Margin="0,0,8,0"/>
+                                    Command="{Binding RecordingViewModel.OpenSavedFileCommand, Source={StaticResource ServiceLocator}}" Margin="8,0" Padding="10,5"/>
                             <Button Content="{Binding [OpenContainingFolder], Source={StaticResource Loc}, Mode=OneWay}"
-                                    Command="{Binding RecordingViewModel.OpenSavedFolderCommand, Source={StaticResource ServiceLocator}}"/>
+                                    Command="{Binding RecordingViewModel.OpenSavedFolderCommand, Source={StaticResource ServiceLocator}}" Padding="10,5"/>
                         </WrapPanel>
-                    </StackPanel>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding [SavedFileLocation], Source={StaticResource Loc}, Mode=OneWay}" FontSize="11" Opacity="0.7"/>
+                            <TextBlock Text="{Binding RecordingViewModel.LastSavedFile, Source={StaticResource ServiceLocator}}"
+                                       ToolTip="{Binding RecordingViewModel.LastSavedFile, Source={StaticResource ServiceLocator}}"
+                                       TextTrimming="CharacterEllipsis" Margin="0,3,0,0" FontSize="12"/>
+                        </StackPanel>
+                    </DockPanel>
                 </Border>
-                <Frame Source="../Pages/MainPage.xaml"
-                       DockPanel.Dock="Top"/>
+                <Expander x:Name="RecordingOptions" Header="录制参数" IsExpanded="True" DockPanel.Dock="Top" Margin="8,0">
+                    <Frame Source="../Pages/MainPage.xaml"/>
+                </Expander>
 
                 <GridSplitter Height="1"
                               Margin="0,2"
@@ -309,10 +312,12 @@
                               DockPanel.Dock="Bottom"
                               IsEnabled="False"/>
 
-                <DockPanel>
-                    <Button DockPanel.Dock="Top" Content="查看录制 / 导入视频与 GIF" Click="ShowReview_Click" Margin="6,0"/>
-                    <Grid>
-                    <Grid x:Name="LivePreview" Visibility="Collapsed" xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+                <TabControl x:Name="PreviewTabs" SelectionChanged="PreviewTabs_SelectionChanged" Margin="4,0" Padding="0">
+                    <TabItem x:Name="ReviewTab" Header="回看与选帧">
+                        <local:FrameReviewControl x:Name="Review"/>
+                    </TabItem>
+                    <TabItem x:Name="LiveTab" Header="实时录制画面">
+                    <Grid x:Name="LivePreview" xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
                       xmlns:interop="clr-namespace:System.Windows.Interop;assembly=PresentationCore">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="370" Margin="12">
                         <TextBlock Text="{Binding [Preview], Source={StaticResource Loc}, Mode=OneWay}" HorizontalAlignment="Center" Opacity="0.7"/>
@@ -329,9 +334,8 @@
                         </Image.Source>
                     </Image>
                     </Grid>
-                    <local:FrameReviewControl x:Name="Review"/>
-                    </Grid>
-                </DockPanel>
+                    </TabItem>
+                </TabControl>
             </DockPanel>
         </Expander>
     </Grid>

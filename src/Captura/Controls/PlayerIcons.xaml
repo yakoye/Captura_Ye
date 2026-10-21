@@ -1,0 +1,13 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<!-- 从官方 SVG 原样提取路径；来源和许可见 Images/PlayerIcons。 -->
+<Geometry x:Key="PlayerIcon-skip-previous">M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z</Geometry>
+<Geometry x:Key="PlayerIcon-rewind">M11.5,12L20,18V6M11,18V6L2.5,12L11,18Z</Geometry>
+<Geometry x:Key="PlayerIcon-step-backward">M19,5V19H16V5M14,5V19L3,12</Geometry>
+<Geometry x:Key="PlayerIcon-play">M8,5.14V19.14L19,12.14L8,5.14Z</Geometry>
+<Geometry x:Key="PlayerIcon-pause">M14,19H18V5H14M6,19H10V5H6V19Z</Geometry>
+<Geometry x:Key="PlayerIcon-step-forward">M5,5V19H8V5M10,5V19L21,12</Geometry>
+<Geometry x:Key="PlayerIcon-fast-forward">M13,6V18L21.5,12M4,18L12.5,12L4,6V18Z</Geometry>
+<Geometry x:Key="PlayerIcon-skip-next">M16,18H18V6H16M6,18L14.5,12L6,6V18Z</Geometry>
+<Geometry x:Key="PlayerIcon-help-circle-outline">M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z</Geometry>
+</ResourceDictionary>

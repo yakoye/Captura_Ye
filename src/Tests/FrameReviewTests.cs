@@ -11,6 +11,93 @@ namespace Captura.Tests
     public class FrameReviewTests
     {
         [Fact]
+        public void ControlClickKeepsArbitraryDiscreteFramesAndCanRemoveOne()
+        {
+            var selection = new FrameSelection(); selection.Reset(100);
+            selection.Click(2, false, false); selection.Click(17, true, false); selection.Click(63, true, false);
+            Assert.Equal(new[] { 2, 17, 63 }, selection.Snapshot());
+            selection.Click(17, true, false);
+            Assert.Equal(new[] { 2, 63 }, selection.Snapshot());
+            Assert.Equal(17, selection.Current);
+        }
+        [Fact]
+        public void ViewingAndPlaybackPositionsDoNotReplaceSelection()
+        {
+            var selection = new FrameSelection(); selection.Reset(400);
+            selection.Toggle(3); selection.Toggle(70); selection.Toggle(399);
+            for (var i = 0; i < 400; i++) selection.View(i);
+            Assert.Equal(new[] { 3, 70, 399 }, selection.Snapshot());
+            Assert.Equal(399, selection.Anchor);
+        }
+        [Fact]
+        public void ShiftRangeUsesAnchorAndCanShrinkInEitherDirection()
+        {
+            var selection = new FrameSelection(); selection.Reset(100);
+            selection.Click(20, false, false); selection.Click(25, false, true);
+            Assert.Equal(Enumerable.Range(20, 6), selection.Snapshot());
+            selection.Click(22, false, true);
+            Assert.Equal(new[] { 20, 21, 22 }, selection.Snapshot());
+            selection.Click(18, false, true);
+            Assert.Equal(new[] { 18, 19, 20 }, selection.Snapshot());
+            Assert.Equal(20, selection.Anchor);
+        }
+        [Fact]
+        public void ControlShiftAddsRangeToExistingDiscreteSelection()
+        {
+            var selection = new FrameSelection(); selection.Reset(100);
+            selection.Toggle(1); selection.Toggle(50); selection.Click(53, true, true);
+            Assert.Equal(new[] { 1, 50, 51, 52, 53 }, selection.Snapshot());
+        }
+        [Fact]
+        public void PlainClickReplacesSelectionWhileCheckboxToggleAdds()
+        {
+            var selection = new FrameSelection(); selection.Reset(50);
+            selection.Toggle(0); selection.Toggle(7); selection.Toggle(49);
+            selection.Click(10, false, false);
+            Assert.Equal(new[] { 10 }, selection.Snapshot());
+            selection.Toggle(20); Assert.Equal(new[] { 10, 20 }, selection.Snapshot());
+        }
+        [Fact]
+        public void ExportSnapshotIsStableWhileLiveSelectionChanges()
+        {
+            var selection = new FrameSelection(); selection.Reset(30);
+            selection.Toggle(19); selection.Toggle(4);
+            var snapshot = selection.Snapshot(); selection.Clear(); selection.SelectAll();
+            Assert.Equal(new[] { 4, 19 }, snapshot);
+        }
+        [Fact]
+        public void LoadingAnotherMediaClearsSelectionAndAnchor()
+        {
+            var selection = new FrameSelection(); selection.Reset(1000); selection.Toggle(999);
+            selection.Reset(2);
+            Assert.Empty(selection.Selected); Assert.Equal(0, selection.Current); Assert.Equal(0, selection.Anchor);
+            Assert.Equal(2, selection.FrameCount);
+        }
+        [Fact]
+        public void InvalidRangeDoesNotDestroyExistingSelection()
+        {
+            var selection = new FrameSelection(); selection.Reset(10); selection.Toggle(5);
+            Assert.Throws<ArgumentOutOfRangeException>(() => selection.SelectRange(2, 10, false));
+            Assert.Throws<ArgumentOutOfRangeException>(() => selection.Toggle(-1));
+            Assert.Equal(new[] { 5 }, selection.Snapshot());
+        }
+        [Fact]
+        public void ThousandsOfSparseFramesKeepSourceOrder()
+        {
+            var selection = new FrameSelection(); selection.Reset(10000);
+            var expected = Enumerable.Range(0, 10000).Where(i => i % 7 == 0).ToArray();
+            foreach (var i in expected.Reverse()) selection.Toggle(i);
+            Assert.Equal(expected, selection.Snapshot());
+        }
+        [Fact]
+        public void SelectAllAndClearKeepTheViewingPosition()
+        {
+            var selection = new FrameSelection(); selection.Reset(40); selection.View(12);
+            selection.SelectAll(); Assert.Equal(40, selection.Count); Assert.Equal(12, selection.Current);
+            selection.Clear(); Assert.Empty(selection.Selected); Assert.Equal(12, selection.Current);
+            selection.Reset(0); selection.SelectAll(); Assert.Empty(selection.Selected);
+        }
+        [Fact]
         public void TimelineUsesRealFrameTimesAndClampsEdges()
         {
             var media = new ReviewMedia { Times = new[] { 0.0, 0.04, 0.12, 0.5 } };
@@ -48,6 +135,12 @@ namespace Captura.Tests
                 await FrameReviewService.RunBytesAsync(executable, "-v error -nostdin -f lavfi -i testsrc2=size=96x64:rate=10:duration=1 " + (kind == "vfr" ? "-vf \"select='eq(n,0)+eq(n,1)+eq(n,5)+eq(n,9)'\" -fps_mode vfr " : "") + FrameReviewService.Quote(file), CancellationToken.None);
                 var service = new FrameReviewService(executable);
                 var media = await service.OpenAsync(file, CancellationToken.None);
+                var thumbnail = await service.ReadThumbnailAsync(media, 0, CancellationToken.None);
+                using (var thumbnailStream = new MemoryStream(thumbnail))
+                using (var thumbnailImage = new System.Drawing.Bitmap(thumbnailStream)) {
+                    Assert.InRange(thumbnailImage.Width, 1, 144);
+                    Assert.InRange(thumbnailImage.Height, 1, 90);
+                }
                 Assert.Equal(kind == "vfr" ? 4 : 10, media.Times.Length);
                 var frames = kind == "vfr" ? new[] { 0, 1, 3 } : new[] { 0, 4, 9 };
                 var fallbackMedia = await new FrameReviewService(executable, false).OpenAsync(file, CancellationToken.None);

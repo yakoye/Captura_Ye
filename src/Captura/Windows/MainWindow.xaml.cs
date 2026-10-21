@@ -13,6 +13,8 @@ namespace Captura
         public static MainWindow Instance { get; private set; }
 
         readonly MainWindowHelper _helper;
+        double _expandedWidth = 1120, _expandedHeight = 850;
+        bool _expandedLayout;
 
         public MainWindow()
         {
@@ -28,7 +30,7 @@ namespace Captura
 
             _helper.TimerModel.Init();
             Review.LiveRequested += ShowLivePreview;
-            Review.ReviewRequested += () => { LivePreview.Visibility = Visibility.Collapsed; Review.Visibility = Visibility.Visible; };
+            Review.ReviewRequested += () => { PreviewTabs.SelectedItem = ReviewTab; RecordingOptions.IsExpanded = false; };
             _helper.RecordingViewModel.PropertyChanged += async (sender, e) => {
                 if (e.PropertyName == nameof(RecordingViewModel.LastSavedFile)) {
                     var file = _helper.RecordingViewModel.LastSavedFile;
@@ -40,13 +42,18 @@ namespace Captura
             };
             Closed += (sender, e) => Review.Dispose();
 
-            Loaded += (Sender, Args) =>
+            Loaded += async (Sender, Args) =>
             {
+                ApplyLayout(_helper.Settings.UI.Expanded);
                 RepositionWindowIfOutside();
 
                 ServiceProvider.Get<WebcamPage>().SetupPreview();
 
                 _helper.HotkeySetup.ShowUnregistered();
+                if (!string.IsNullOrWhiteSpace(App.CmdOptions.Review)) {
+                    _helper.Settings.UI.Expanded = true;
+                    await Review.OpenMediaAsync(App.CmdOptions.Review);
+                }
             };
 
             if (App.CmdOptions.Tray || _helper.Settings.Tray.MinToTrayOnStartup)
@@ -64,15 +71,41 @@ namespace Captura
 
         public void ShowLivePreview()
         {
-            if (Review.Visibility == Visibility.Visible) Review.Suspend();
-            Review.Visibility = Visibility.Collapsed;
-            LivePreview.Visibility = Visibility.Visible;
+            if (PreviewTabs.SelectedItem == ReviewTab) Review.Suspend();
+            PreviewTabs.SelectedItem = LiveTab;
         }
-
-        void ShowReview_Click(object sender, RoutedEventArgs e)
+        void PreviewTabs_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            LivePreview.Visibility = Visibility.Collapsed;
-            Review.Visibility = Visibility.Visible;
+            if (!ReferenceEquals(e.OriginalSource, PreviewTabs) || Review == null) return;
+            if (PreviewTabs.SelectedItem == LiveTab) { Review.Suspend(); RecordingOptions.IsExpanded = true; }
+            else Review.ResumePreview();
+        }
+        void Main_Expanded(object sender, RoutedEventArgs e)
+        {
+            if (IsLoaded && ReferenceEquals(e.OriginalSource, MainExpander)) ApplyLayout(true);
+        }
+        void Main_Collapsed(object sender, RoutedEventArgs e)
+        {
+            if (IsLoaded && ReferenceEquals(e.OriginalSource, MainExpander)) ApplyLayout(false);
+        }
+        void ApplyLayout(bool expanded)
+        {
+            var area = SystemParameters.WorkArea;
+            if (expanded) {
+                ResizeMode = ResizeMode.CanResize;
+                MinWidth = System.Math.Min(900, area.Width - 20);
+                MinHeight = System.Math.Min(720, area.Height - 20);
+                Width = System.Math.Min(_expandedWidth, area.Width - 20);
+                Height = System.Math.Min(_expandedHeight, area.Height - 20);
+            }
+            else {
+                Review.Suspend();
+                if (_expandedLayout && WindowState == WindowState.Normal) { _expandedWidth = ActualWidth; _expandedHeight = ActualHeight; }
+                if (WindowState == WindowState.Maximized) WindowState = WindowState.Normal;
+                MinWidth = 440; MinHeight = 86; Width = 440; Height = 90;
+                ResizeMode = ResizeMode.CanMinimize;
+            }
+            _expandedLayout = expanded;
         }
 
         void WakeApp()

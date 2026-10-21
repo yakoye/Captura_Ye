@@ -102,8 +102,8 @@ try {
         Run 'dotnet' @('build','src\Captura.Console\Captura.Console.csproj','-c','Release','-v','minimal')
         $frameTests = 'FullyQualifiedName~FrameReviewTests'
         if (!(Get-Command ffmpeg.exe -ErrorAction SilentlyContinue)) {
-            $frameTests = 'FullyQualifiedName~TimelineUsesRealFrameTimesAndClampsEdges|FullyQualifiedName~SelectionIsOrderedUniqueAndRejectsInvalidFrames|FullyQualifiedName~CancellationDoesNotLaunchMediaProcess'
-            Write-Host '系统 PATH 未找到 FFmpeg：跳过 5 项媒体抽帧集成测试，仍运行 3 项选帧逻辑测试。'
+            $frameTests = '(FullyQualifiedName~FrameReviewTests&FullyQualifiedName!~ExactFramePreviewMatchesBatchPngAndCompositions&FullyQualifiedName!~LargeSelectionCrossesBatchBoundaryWithoutLosingFrames&FullyQualifiedName!~RunningDecoderCanBeCancelled)'
+            Write-Host '系统 PATH 未找到 FFmpeg：跳过 5 项媒体抽帧集成测试，仍运行 13 项选帧逻辑测试。'
         }
         $testFilter = 'FullyQualifiedName~PropertyStoreTests|FullyQualifiedName~RecorderTests|FullyQualifiedName~AudioFileWriterTests|FullyQualifiedName~ImageProviderTests|FullyQualifiedName~ReleaseBehaviorTests|' + $frameTests
         Run 'dotnet' @('test','src\Tests\Tests.csproj','-c','Release','--filter',$testFilter,'--logger',"trx;LogFileName=core.trx",'--results-directory',$logRoot,'-v','minimal')
@@ -116,6 +116,7 @@ try {
         New-Item -ItemType Directory -Force -Path (Join-Path $portable 'Settings') | Out-Null
         [IO.File]::WriteAllText((Join-Path $portable 'Settings\Captura.json'), '{"UI":{"Language":"zh-CN"}}', (New-Object Text.UTF8Encoding($false)))
         Copy-Item (Join-Path $root 'LICENSE.md') -Destination $portable
+        Copy-Item (Join-Path $root 'src\Captura\Images\PlayerIcons') -Destination (Join-Path $portable 'PlayerIcons') -Recurse
         Copy-Item (Join-Path $root 'README.md') -Destination $portable
         $notes = @"
 # Captura Ye 中文版 $tag

@@ -22,5 +22,8 @@ namespace Captura
 
         [Option("settings", HelpText = "设置目录")]
         public string Settings { get; set; }
+
+        [Option("review", HelpText = "启动后打开指定视频或 GIF，进入回看与选帧界面。")]
+        public string Review { get; set; }
     }
 }

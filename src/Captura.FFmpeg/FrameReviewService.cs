@@ -83,6 +83,13 @@ namespace Captura.FFmpeg
             return await RunBytesAsync(_ffmpeg, "-v error -nostdin -ss " + seek + " -i " + Quote(media.FilePath) + " -map 0:v:0 -frames:v 1 -f image2pipe -c:v png -", token);
         }
 
+        public Task<byte[]> ReadThumbnailAsync(ReviewMedia media, int index, CancellationToken token)
+        {
+            if (index < 0 || index >= media.Times.Length) throw new ArgumentOutOfRangeException(nameof(index));
+            var seek = Math.Max(0, media.Times[index] - 0.000001).ToString("0.######", Invariant);
+            return RunBytesAsync(_ffmpeg, "-v error -nostdin -ss " + seek + " -i " + Quote(media.FilePath) + " -map 0:v:0 -frames:v 1 -vf \"scale=144:90:force_original_aspect_ratio=decrease\" -f image2pipe -c:v mjpeg -", token);
+        }
+
         public static int[] NormalizeSelection(IEnumerable<int> frames, int count)
         {
             var result = frames.Distinct().OrderBy(n => n).ToArray();
