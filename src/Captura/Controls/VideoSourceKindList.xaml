@@ -59,6 +59,7 @@
         </ListView.ItemTemplate>
         <ListView.ItemContainerStyle>
             <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 <EventSetter Event="PreviewMouseLeftButtonDown" Handler="OnVideoSourceReSelect"/>
             </Style>
         </ListView.ItemContainerStyle>

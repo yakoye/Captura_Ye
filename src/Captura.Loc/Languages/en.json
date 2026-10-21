@@ -181,7 +181,7 @@
   "SourcePicker": "Source Picker",
   "ScreenPicker": "Screen Picker",
   "RegionPicker": "Region Picker",
-  "OpenFile": "Open File ...",
+  "OpenFile": "Open file",
   "TrimLabel": "Trim ...",
   "Microphone": "Microphone",
   "Speaker": "Speaker",
@@ -370,5 +370,13 @@
   "Stop": "Stop",
   "Pause": "Pause",
   "Shot": "Shot",
-  "Notification": "Notification"
+  "Notification": "Notification",
+  "RecordWindowDescription": "Record a specific window.\nThe video is of the initial size of the window.",
+  "DetectFFmpeg": "Detect FFmpeg",
+  "FFmpegSearching": "Searching for FFmpeg...",
+  "FFmpegDetected": "FFmpeg configured: {0}",
+  "FFmpegNotDetected": "FFmpeg was not found. Download it or select its folder.",
+  "PreviewUsage": "Preview appears while recording. For preview without saving, select Preview Only in Settings / Video, then press Record. Audio-only mode has no video preview.",
+  "OpenContainingFolder": "Open containing folder",
+  "SavedFileLocation": "Recording saved to:"
 }

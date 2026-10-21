@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Captura.Models;
+using Captura.ViewModels;
 
 namespace Captura
 {
@@ -26,6 +27,18 @@ namespace Captura
             _helper.HotkeySetup.Setup();
 
             _helper.TimerModel.Init();
+            Review.LiveRequested += ShowLivePreview;
+            Review.ReviewRequested += () => { LivePreview.Visibility = Visibility.Collapsed; Review.Visibility = Visibility.Visible; };
+            _helper.RecordingViewModel.PropertyChanged += async (sender, e) => {
+                if (e.PropertyName == nameof(RecordingViewModel.LastSavedFile)) {
+                    var file = _helper.RecordingViewModel.LastSavedFile;
+                    if (System.IO.File.Exists(file) && new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".webm", ".gif", ".m4v" }.Contains(System.IO.Path.GetExtension(file).ToLowerInvariant())) {
+                        _helper.Settings.UI.Expanded = true;
+                        await Review.OpenMediaAsync(file);
+                    }
+                }
+            };
+            Closed += (sender, e) => Review.Dispose();
 
             Loaded += (Sender, Args) =>
             {
@@ -47,6 +60,19 @@ namespace Captura
 
             // Register to bring this instance to foreground when other instances are launched.
             SingleInstanceManager.StartListening(WakeApp);
+        }
+
+        public void ShowLivePreview()
+        {
+            if (Review.Visibility == Visibility.Visible) Review.Suspend();
+            Review.Visibility = Visibility.Collapsed;
+            LivePreview.Visibility = Visibility.Visible;
+        }
+
+        void ShowReview_Click(object sender, RoutedEventArgs e)
+        {
+            LivePreview.Visibility = Visibility.Collapsed;
+            Review.Visibility = Visibility.Visible;
         }
 
         void WakeApp()

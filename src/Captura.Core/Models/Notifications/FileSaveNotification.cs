@@ -23,10 +23,10 @@ namespace Captura
             _loc = ServiceProvider.Get<ILocalizationProvider>();
             _icons = ServiceProvider.Get<IIconSet>();
 
-            _fileName = RecentItem.FileName;
+            _fileName = Path.GetFullPath(RecentItem.FileName);
 
             PrimaryText = string.Format(Captura.Loc.LanguageManager.Instance["SavingFile"], Captura.Loc.LanguageManager.Instance[_recentItem.FileType.ToString()]);
-            SecondaryText = Path.GetFileName(_fileName);
+            SecondaryText = _fileName;
         }
 
         public void Converting()
@@ -36,12 +36,28 @@ namespace Captura
 
         public void Converted(string NewFileName)
         {
-            SecondaryText = Path.GetFileName(NewFileName);
-            _fileName = NewFileName;
+            _fileName = Path.GetFullPath(NewFileName);
+            SecondaryText = _fileName;
         }
 
         public void Saved()
         {
+            var openAction = new NotificationAction
+            {
+                Icon = _icons.OpenFile,
+                Name = LanguageManager.Instance["OpenFile"]
+            };
+            openAction.Click += RaiseClick;
+            _notificationActions.Add(openAction);
+
+            var folderAction = new NotificationAction
+            {
+                Icon = _icons.Folder,
+                Name = LanguageManager.Instance["OpenContainingFolder"]
+            };
+            folderAction.Click += () => ServiceProvider.LaunchFile(new ProcessStartInfo("explorer.exe", $"/select,\"{_fileName}\""));
+            _notificationActions.Add(folderAction);
+
             var deleteAction = new NotificationAction
             {
                 Icon = _icons.Delete,

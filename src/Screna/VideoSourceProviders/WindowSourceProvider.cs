@@ -50,8 +50,7 @@ namespace Captura.Video
 
         public override string Name => Loc.Window;
 
-        public override string Description { get; } = @"Record a specific window.
-The video is of the initial size of the window.";
+        public override string Description => LanguageManager.Instance["RecordWindowDescription"];
 
         public override string Icon { get; }
 

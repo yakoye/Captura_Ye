@@ -42,6 +42,8 @@
                MouseUp="TextBlock_MouseUp"
                Cursor="Hand">
             <TextBlock Text="{Binding SecondaryText}"
+                       TextWrapping="Wrap"
+                       ToolTip="{Binding SecondaryText}"
                        Padding="5,0,5,5"
                        Style="{StaticResource Small}"/>
         </Label>

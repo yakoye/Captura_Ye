@@ -11,62 +11,27 @@ namespace Captura.FFmpeg
 
         static FFmpegSettings GetSettings() => ServiceProvider.Get<FFmpegSettings>();
 
-        public static bool FFmpegExists
+        static readonly object DiscoveryLock = new object();
+        static string _discoveredPath;
+        static System.DateTime _lastDiscovery;
+
+        public static string DetectExecutable(bool Force = false)
         {
-            get
+            var configured = Path.Combine(GetSettings().GetFolderPath(), FFmpegExeName);
+            if (File.Exists(configured)) return Path.GetFullPath(configured);
+            lock (DiscoveryLock)
             {
-                var folderPath = GetSettings().GetFolderPath();
-
-                // FFmpeg folder
-                if (!string.IsNullOrWhiteSpace(folderPath))
-                {
-                    var path = Path.Combine(folderPath, FFmpegExeName);
-
-                    if (File.Exists(path))
-                        return true;
-                }
-
-                if (ServiceProvider.FileExists(FFmpegExeName))
-                    return true;
-
-                // PATH
-                try
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = FFmpegExeName,
-                        Arguments = "-version",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    });
-
-                    return true;
-                }
-                catch { return false; }
+                if (!Force && _discoveredPath != null && File.Exists(_discoveredPath)) return _discoveredPath;
+                if (!Force && System.DateTime.UtcNow - _lastDiscovery < System.TimeSpan.FromSeconds(10)) return null;
+                _discoveredPath = FFmpegDiscovery.FindInDirectories(FFmpegDiscovery.GetSearchDirectories(ServiceProvider.AppDir));
+                _lastDiscovery = System.DateTime.UtcNow;
+                return _discoveredPath;
             }
         }
 
-        public static string FFmpegExePath
-        {
-            get
-            {
-                var folderPath = GetSettings().GetFolderPath();
+        public static bool FFmpegExists => DetectExecutable() != null;
 
-                // FFmpeg folder
-                if (!string.IsNullOrWhiteSpace(folderPath))
-                {
-                    var path = Path.Combine(folderPath, FFmpegExeName);
-
-                    if (File.Exists(path))
-                        return path;
-                }
-
-                return new[] { ServiceProvider.AppDir, ServiceProvider.LibDir }
-                           .Where(M => M != null)
-                           .FirstOrDefault(M => File.Exists(Path.Combine(M, FFmpegExeName)))
-                       ?? FFmpegExeName;
-            }
-        }
+        public static string FFmpegExePath => DetectExecutable() ?? FFmpegExeName;
 
         public static Process StartFFmpeg(string Arguments, string FileName, out IFFmpegLogEntry FFmpegLog)
         {

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
+using System.Windows.Controls;
 using Captura.Loc;
 using Captura.Models;
 using Captura.MouseKeyHook;
@@ -17,6 +18,11 @@ namespace Captura
     {
         public App()
         {
+            ToolTipService.InitialShowDelayProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(150));
+            ToolTipService.BetweenShowDelayProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(1000));
+            ToolTipService.ShowDurationProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(20000));
+            ToolTipService.ShowOnDisabledProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(true));
+
             SingleInstanceManager.SingleInstanceCheck();
 
             // Splash Screen should be created manually and after single-instance is checked

@@ -173,6 +173,18 @@ namespace Captura
             set => Set(value);
         }
 
+        public string FrameExportFolder
+        {
+            get => Get("");
+            set => Set(value);
+        }
+
+        public string LastRecordingPath
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
         public string GetFileName(string Extension, string FileName = null)
         {
             if (FileName != null)

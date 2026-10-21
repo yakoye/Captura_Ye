@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Diagnostics;
 using Captura.Audio;
 using Captura.FFmpeg;
 using Captura.Loc;
@@ -35,6 +36,11 @@ namespace Captura.ViewModels
 
         public ICommand RecordCommand { get; }
         public ICommand PauseCommand { get; }
+        public ICommand OpenSavedFileCommand { get; }
+        public ICommand OpenSavedFolderCommand { get; }
+
+        public string LastSavedFile => Settings.LastRecordingPath;
+        public bool HasSavedRecording => !string.IsNullOrWhiteSpace(LastSavedFile);
 
         public RecordingViewModel(RecordingModel RecordingModel,
             Settings Settings,
@@ -62,6 +68,19 @@ namespace Captura.ViewModels
             _messageProvider = MessageProvider;
             _audioSourceViewModel = AudioSourceViewModel;
             _ffmpegViewsProvider = FFmpegViewsProvider;
+
+            OpenSavedFileCommand = new DelegateCommand(() =>
+            {
+                if (File.Exists(LastSavedFile) || Directory.Exists(LastSavedFile))
+                    ServiceProvider.LaunchFile(new ProcessStartInfo(LastSavedFile));
+                else _messageProvider.ShowError(LanguageManager.Instance["FilenotFound"]);
+            });
+            OpenSavedFolderCommand = new DelegateCommand(() =>
+            {
+                if (File.Exists(LastSavedFile) || Directory.Exists(LastSavedFile))
+                    ServiceProvider.LaunchFile(new ProcessStartInfo("explorer.exe", $"/select,\"{Path.GetFullPath(LastSavedFile)}\""));
+                else _messageProvider.ShowError(LanguageManager.Instance["FilenotFound"]);
+            });
 
             var hasAudio = new[]
             {
@@ -204,11 +223,13 @@ namespace Captura.ViewModels
 
             var wasWaiting = _timerModel.Waiting;
             _timerModel.Waiting = false;
+            var savedSuccessfully = false;
 
             try
             {
                 // Ensure saved
                 await task;
+                savedSuccessfully = true;
 
                 if (postWriter != null)
                 {
@@ -285,7 +306,8 @@ namespace Captura.ViewModels
                 }
             }
 
-            if (savingRecentItem != null)
+            if (savingRecentItem != null && savedSuccessfully && !wasWaiting
+                && (File.Exists(savingRecentItem.FileName) || Directory.Exists(savingRecentItem.FileName)))
             {
                 AfterSave(savingRecentItem, notification);
             }
@@ -299,6 +321,9 @@ namespace Captura.ViewModels
                 SavingRecentItem.FileName.WriteToClipboard();
 
             Notification.Saved();
+            Settings.LastRecordingPath = Path.GetFullPath(SavingRecentItem.FileName);
+            RaisePropertyChanged(nameof(LastSavedFile));
+            RaisePropertyChanged(nameof(HasSavedRecording));
         }
 
         void StartRecording()

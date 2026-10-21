@@ -13,6 +13,9 @@ Get-ChildItem (Join-Path $Root 'src') -Recurse -File | Where-Object {
     $_.Extension -in '.cs', '.xaml' -and $_.FullName -notmatch '\\(bin|obj)\\'
 } | ForEach-Object {
     $content = Get-Content $_.FullName -Raw -Encoding UTF8
+    if ($_.Extension -eq '.cs' -and $content -match 'public\s+(?:override\s+)?string\s+Description\s*(?:\{\s*get;\s*\}\s*=|=>)\s*@?"[A-Za-z]') {
+        throw "悬停说明仍然直接使用英文，可能遗漏了多行文字：$($_.FullName)"
+    }
     foreach ($match in [regex]::Matches($content, 'LanguageManager\.Instance\["([^"]+)"\]|\{Binding \[([^\]]+)\], Source=\{StaticResource Loc\}')) {
         $key = $match.Groups[1].Value + $match.Groups[2].Value
         if ($keys -notcontains $key) { throw "未知语言键：$key，文件：$($_.FullName)" }

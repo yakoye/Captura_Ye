@@ -1,11 +1,12 @@
 ﻿param(
     [Parameter(Mandatory=$true)][string]$Source,
     [Parameter(Mandatory=$true)][string]$Version,
+    [switch]$IncludePortableFolder,
     [string[]]$ArchiveRoots = @('C:\Users\color\Downloads\yakoye-release', '\\192.168.7.100\Downloads\yakoye-release')
 )
 $ErrorActionPreference = 'Stop'
 $sourceRoot = (Resolve-Path -LiteralPath $Source).Path
-$files = @(Get-ChildItem -LiteralPath $sourceRoot -File -Recurse)
+$files = @(Get-ChildItem -LiteralPath $sourceRoot -File -Recurse:$IncludePortableFolder)
 if (!$files.Count) { throw '发布目录为空，拒绝归档。' }
 $manifest = @($files | ForEach-Object {
     [pscustomobject]@{ RelativePath=$_.FullName.Substring($sourceRoot.Length + 1); Length=$_.Length; SHA256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash }

@@ -32,6 +32,8 @@
                     中文维护：yakoye<LineBreak/>
                     基于 Mathew Sachin 的 Captura 开源项目，遵循 MIT 许可证。<LineBreak/>
                     本版本补齐界面、悬停说明、录制模式和错误提示的简体中文翻译，默认使用简体中文。<LineBreak/>
+                    新增 FFmpeg 自动查找、快速悬停提示、录制结果播放器和文件位置入口。<LineBreak/>
+                    支持视频/GIF 拖入、按秒快进、逐帧多选，以及选中帧导出 PNG、视频或 GIF。<LineBreak/>
                     支持截图、屏幕录制、音频录制、摄像头和叠加层。MP4 等格式需要 FFmpeg。<LineBreak/>
                     项目仓库：<Hyperlink Command="{Binding HyperlinkCommand}" CommandParameter="https://github.com/yakoye/Captura_Ye">yakoye/Captura_Ye</Hyperlink><LineBreak/>
                     发行日期：2026-10-21

@@ -100,7 +100,13 @@ try {
         $compiler = Get-Compiler
         Run 'dotnet' @('build','src\Captura\Captura.csproj','-c','Release','-t:Rebuild','-v','minimal')
         Run 'dotnet' @('build','src\Captura.Console\Captura.Console.csproj','-c','Release','-v','minimal')
-        Run 'dotnet' @('test','src\Tests\Tests.csproj','-c','Release','--filter','FullyQualifiedName~PropertyStoreTests|FullyQualifiedName~RecorderTests|FullyQualifiedName~AudioFileWriterTests|FullyQualifiedName~ImageProviderTests','--logger',"trx;LogFileName=core.trx",'--results-directory',$logRoot,'-v','minimal')
+        $frameTests = 'FullyQualifiedName~FrameReviewTests'
+        if (!(Get-Command ffmpeg.exe -ErrorAction SilentlyContinue)) {
+            $frameTests = 'FullyQualifiedName~TimelineUsesRealFrameTimesAndClampsEdges|FullyQualifiedName~SelectionIsOrderedUniqueAndRejectsInvalidFrames|FullyQualifiedName~CancellationDoesNotLaunchMediaProcess'
+            Write-Host '系统 PATH 未找到 FFmpeg：跳过 5 项媒体抽帧集成测试，仍运行 3 项选帧逻辑测试。'
+        }
+        $testFilter = 'FullyQualifiedName~PropertyStoreTests|FullyQualifiedName~RecorderTests|FullyQualifiedName~AudioFileWriterTests|FullyQualifiedName~ImageProviderTests|FullyQualifiedName~ReleaseBehaviorTests|' + $frameTests
+        Run 'dotnet' @('test','src\Tests\Tests.csproj','-c','Release','--filter',$testFilter,'--logger',"trx;LogFileName=core.trx",'--results-directory',$logRoot,'-v','minimal')
         & (Join-Path $PSScriptRoot 'verify-recording.ps1') -Root $root -LogRoot $logRoot
         $stage = Join-Path $root ('temp\package-' + [guid]::NewGuid().ToString('N'))
         $portable = Join-Path $stage 'CapturaYe'
@@ -121,8 +127,10 @@ try {
 
 运行要求：Windows 10/11，.NET Framework 4.7.2 或更高版本。MP4 等格式需要 FFmpeg，可在程序内下载或指定目录。网络上传功能需要自行配置服务凭据。
 
-验证：中文资源完整性检查、22 项核心测试、实际截图和 AVI 录制（系统有 FFmpeg 时也验证 MP4）、中文安装包静默安装/卸载及载荷哈希校验。详细日志保存在本地 temp/logs。
+验证：中文资源完整性检查、核心及回归测试、实际截图和 AVI 录制（系统有 FFmpeg 时也验证 MP4）、中文安装包静默安装/卸载及载荷哈希校验。详细日志保存在本地 temp/logs。
 "@
+        $versionNotes = Join-Path $root "docs\releases\$tag.md"
+        if (Test-Path -LiteralPath $versionNotes) { $notes = Get-Content -LiteralPath $versionNotes -Raw -Encoding UTF8 }
         [IO.File]::WriteAllText((Join-Path $stage 'release-notes.md'), $notes, (New-Object Text.UTF8Encoding($true)))
         Copy-Item (Join-Path $stage 'release-notes.md') -Destination $portable
         $zip = Join-Path $stage "CapturaYe-$tag-Portable.zip"

@@ -4,10 +4,10 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:Captura"
         DataContext="{Binding MainViewModel, Source={StaticResource ServiceLocator}}"
-        ResizeMode="CanMinimize"
+        ResizeMode="CanResize"
         Icon="../Images/Captura.ico"
         SizeToContent="Height"
-        MaxWidth="440"
+        MinWidth="440" Width="640" MaxWidth="1400"
         Title="Captura"
         Left="{Binding Settings.UI.MainWindowLeft, Mode=TwoWay}"
         Top="{Binding Settings.UI.MainWindowTop, Mode=TwoWay}"
@@ -272,7 +272,22 @@
                 </Grid>
             </Expander.Header>
             <DockPanel Margin="-5,0"
-                       Height="300">
+                       Height="620">
+                <Border DockPanel.Dock="Bottom" Margin="8,4" Padding="6" BorderThickness="1"
+                        BorderBrush="{DynamicResource Accent}"
+                        Visibility="{Binding RecordingViewModel.HasSavedRecording, Source={StaticResource ServiceLocator}, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding [SavedFileLocation], Source={StaticResource Loc}, Mode=OneWay}"/>
+                        <TextBlock Text="{Binding RecordingViewModel.LastSavedFile, Source={StaticResource ServiceLocator}}"
+                                   TextWrapping="Wrap" Margin="0,4" FontSize="11"/>
+                        <WrapPanel>
+                            <Button Content="{Binding [OpenFile], Source={StaticResource Loc}, Mode=OneWay}"
+                                    Command="{Binding RecordingViewModel.OpenSavedFileCommand, Source={StaticResource ServiceLocator}}" Margin="0,0,8,0"/>
+                            <Button Content="{Binding [OpenContainingFolder], Source={StaticResource Loc}, Mode=OneWay}"
+                                    Command="{Binding RecordingViewModel.OpenSavedFolderCommand, Source={StaticResource ServiceLocator}}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
                 <Frame Source="../Pages/MainPage.xaml"
                        DockPanel.Dock="Top"/>
 
@@ -294,11 +309,15 @@
                               DockPanel.Dock="Bottom"
                               IsEnabled="False"/>
 
-                <Grid xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+                <DockPanel>
+                    <Button DockPanel.Dock="Top" Content="查看录制 / 导入视频与 GIF" Click="ShowReview_Click" Margin="6,0"/>
+                    <Grid>
+                    <Grid x:Name="LivePreview" Visibility="Collapsed" xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
                       xmlns:interop="clr-namespace:System.Windows.Interop;assembly=PresentationCore">
-                    <Label Content="{Binding [Preview], Source={StaticResource Loc}, Mode=OneWay}"
-                           HorizontalAlignment="Center"
-                           Opacity="0.7"/>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="370" Margin="12">
+                        <TextBlock Text="{Binding [Preview], Source={StaticResource Loc}, Mode=OneWay}" HorizontalAlignment="Center" Opacity="0.7"/>
+                        <TextBlock Text="{Binding [PreviewUsage], Source={StaticResource Loc}, Mode=OneWay}" TextWrapping="Wrap" Margin="0,8" FontSize="11" Opacity="0.7"/>
+                    </StackPanel>
                     <WindowsFormsHost Name="WinFormsHost"
                                       Visibility="Collapsed">
                         <wf:PictureBox x:Name="DisplayImage"
@@ -309,7 +328,10 @@
                             <interop:D3DImage x:Name="D3DImage"/>
                         </Image.Source>
                     </Image>
-                </Grid>
+                    </Grid>
+                    <local:FrameReviewControl x:Name="Review"/>
+                    </Grid>
+                </DockPanel>
             </DockPanel>
         </Expander>
     </Grid>

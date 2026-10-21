@@ -181,7 +181,7 @@
   "SourcePicker": "选择录制来源",
   "ScreenPicker": "选择屏幕",
   "RegionPicker": "选择区域",
-  "OpenFile": "打开文件…",
+  "OpenFile": "打开文件",
   "TrimLabel": "剪辑…",
   "Microphone": "麦克风",
   "Speaker": "扬声器",
@@ -370,5 +370,13 @@
   "Stop": "停止录制",
   "Pause": "暂停录制",
   "Shot": "截图",
-  "Notification": "通知"
+  "Notification": "通知",
+  "RecordWindowDescription": "录制指定窗口。\n视频尺寸以开始录制时的窗口大小为准。",
+  "DetectFFmpeg": "自动查找 FFmpeg",
+  "FFmpegSearching": "正在查找 FFmpeg…",
+  "FFmpegDetected": "已配置 FFmpeg：{0}",
+  "FFmpegNotDetected": "未找到 FFmpeg，请下载或手动选择所在目录。",
+  "PreviewUsage": "开始录制后显示实时画面。\n只预览不保存：在“配置 → 视频 → 视频编码器”选择“仅预览”，再点击红色录制按钮。\n仅音频模式不显示画面。",
+  "OpenContainingFolder": "打开所在文件夹",
+  "SavedFileLocation": "录制文件已保存到："
 }

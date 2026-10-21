@@ -46,6 +46,9 @@ namespace Captura.Models
                 new RecentAction(loc.CopyPath, icons.Clipboard, () => this.FileName.WriteToClipboard())
             };
 
+            list.Add(new RecentAction(Captura.Loc.LanguageManager.Instance["OpenContainingFolder"], icons.Folder,
+                () => ServiceProvider.LaunchFile(new ProcessStartInfo("explorer.exe", $"/select,\"{Path.GetFullPath(this.FileName)}\""))));
+
             void AddTrimMedia()
             {
                 list.Add(new RecentAction(loc.Trim, icons.Trim, () => windowService.TrimMedia(this.FileName)));

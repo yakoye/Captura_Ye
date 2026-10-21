@@ -1,0 +1,68 @@
+﻿<UserControl x:Class="Captura.FrameReviewControl"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ AllowDrop="True" Drop="Media_Drop" PreviewDragOver="Media_DragOver"
+ Focusable="True" PreviewKeyDown="Review_KeyDown">
+ <Grid Margin="6">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="100"/>
+   <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+   <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+  </Grid.RowDefinitions>
+  <DockPanel>
+   <Button Content="打开视频 / GIF" Click="Open_Click" Padding="5,2" DockPanel.Dock="Left"/>
+   <Button Content="实时预览" Click="Live_Click" Margin="6,0" Padding="5,2" DockPanel.Dock="Right"/>
+   <TextBlock x:Name="FileLabel" Text="也可拖入视频或 GIF" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+  </DockPanel>
+  <Border Grid.Row="1" Background="#181818" Margin="0,5" MouseLeftButtonDown="Preview_MouseDown" Focusable="True">
+   <Grid>
+    <MediaElement x:Name="Player" LoadedBehavior="Manual" UnloadedBehavior="Manual" ScrubbingEnabled="True"
+                  MediaOpened="Player_Opened" MediaEnded="Player_Ended" MediaFailed="Player_Failed"/>
+    <Image x:Name="Still" Stretch="Uniform"/>
+    <TextBlock x:Name="EmptyHint" Text="录制结束自动载入；也可将视频或 GIF 拖到此处" TextWrapping="Wrap" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18"/>
+   </Grid>
+  </Border>
+  <StackPanel Grid.Row="2">
+   <Slider x:Name="Timeline" Minimum="0" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；播放模式左右键按秒移动，选帧模式左右键逐帧"/>
+   <CheckBox x:Name="FrameMode" Content="选帧模式（← → 逐帧，空格选中）" Checked="Mode_Changed" Unchecked="Mode_Changed" Margin="0,3"/>
+   <WrapPanel VerticalAlignment="Center">
+    <Button Content="上一帧 ←" Click="Previous_Click" Padding="4,2"/>
+    <Button x:Name="PlayButton" Content="播放" Click="Play_Click" Padding="8,2" Margin="4,0"/>
+    <Button Content="下一帧 →" Click="Next_Click" Padding="4,2"/>
+    <Button x:Name="SelectButton" Content="选中帧（空格）" Click="Select_Click" Padding="4,2" Margin="4,0"/>
+   </WrapPanel>
+   <TextBlock x:Name="PositionLabel" Margin="0,4" Text="播放模式：← → 按 1 秒快退 / 快进，空格播放 / 暂停" TextWrapping="Wrap"/>
+  </StackPanel>
+  <StackPanel Grid.Row="3">
+   <WrapPanel>
+    <Button x:Name="RangeStartButton" Content="设为范围起点" Click="RangeStart_Click" Padding="4,2"/>
+    <Button Content="选到当前帧" Click="RangeEnd_Click" Margin="4,0" Padding="4,2"/>
+    <Button Content="清空选择" Click="Clear_Click" Padding="4,2"/>
+    <TextBlock x:Name="SelectionLabel" Text="已选 0 帧" Margin="6,3"/>
+   </WrapPanel>
+   <ListBox x:Name="SelectedFrames" Height="65" Margin="0,4" SelectionChanged="Selection_Changed"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled" ToolTip="点击已选帧返回画面；空格可取消选择"/>
+  </StackPanel>
+  <StackPanel Grid.Row="4">
+   <DockPanel Margin="0,3">
+    <TextBlock Text="导出到：" VerticalAlignment="Center"/>
+    <Button DockPanel.Dock="Right" Content="选择目录" Click="OutputFolder_Click" Padding="4,2"/>
+    <TextBox x:Name="OutputRoot" ToolTip="首次默认使用源文件旁的 Captura-exports；设置后记住该位置"/>
+   </DockPanel>
+   <WrapPanel x:Name="ExportBar">
+    <Button Content="导出图片" Click="ExportPng_Click" Padding="4,2"/>
+    <Button Content="导出视频" Click="ExportMp4_Click" Margin="4,0" Padding="4,2"/>
+    <Button Content="导出 GIF" Click="ExportGif_Click" Padding="4,2"/>
+    <TextBlock Text="帧率" Margin="6,3"/>
+    <TextBox x:Name="ExportFps" Text="10" Width="34" ToolTip="合成帧率：1—60；选中帧按时间顺序合成，不含音频"/>
+   </WrapPanel>
+   <WrapPanel>
+    <Button x:Name="CancelButton" Content="取消处理" Click="Cancel_Click" Visibility="Collapsed" Padding="4,2"/>
+    <Button x:Name="OutputButton" Content="打开导出目录" Click="Output_Click" Visibility="Collapsed" Margin="4,0" Padding="4,2"/>
+   </WrapPanel>
+  </StackPanel>
+  <ScrollViewer Grid.Row="5" MaxHeight="42" VerticalScrollBarVisibility="Auto" Margin="0,4">
+   <TextBlock x:Name="Status" Text="图片按原始尺寸导出；视频 / GIF 由选中帧合成，不含音频。" TextWrapping="Wrap" FontSize="11"/>
+  </ScrollViewer>
+ </Grid>
+</UserControl>

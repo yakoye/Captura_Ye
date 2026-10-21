@@ -48,6 +48,7 @@ namespace Captura.Video
 
             win.Dispatcher.Invoke(() =>
             {
+                win.ShowLivePreview();
                 win.DisplayImage.Image = null;
 
                 _lastFrame?.Dispose();

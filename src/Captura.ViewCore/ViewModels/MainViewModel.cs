@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using System.IO;
+using System.Threading.Tasks;
 using Captura.FFmpeg;
 using Captura.Hotkeys;
 using Captura.Loc;
@@ -26,6 +28,7 @@ namespace Captura.ViewModels
         public ICommand SelectOutputFolderCommand { get; }
         public ICommand SelectFFmpegFolderCommand { get; }
         public ICommand ResetFFmpegFolderCommand { get; }
+        public ICommand DetectFFmpegCommand { get; }
         public ICommand TrayLeftClickCommand { get; }
 
         public IReadOnlyReactiveProperty<string> OutFolderDisplay { get; }
@@ -53,6 +56,9 @@ namespace Captura.ViewModels
             SelectFFmpegFolderCommand = new ReactiveCommand()
                 .WithSubscribe(FFmpegViewsProvider.PickFolder);
 
+            DetectFFmpegCommand = new ReactiveCommand()
+                .WithSubscribe(async () => await DetectFFmpeg());
+
             #region Commands
             OpenOutputFolderCommand = new ReactiveCommand()
                 .WithSubscribe(OpenOutputFolder);
@@ -76,6 +82,45 @@ namespace Captura.ViewModels
             {
                 _rememberByName.RestoreRemembered();
             }
+
+            DetectFFmpegCommand.ExecuteIfCan();
+        }
+
+        bool _detectingFFmpeg;
+        string _ffmpegDetectionStatus;
+
+        public string FFmpegDetectionStatus
+        {
+            get => _ffmpegDetectionStatus;
+            private set => Set(ref _ffmpegDetectionStatus, value);
+        }
+
+        async Task DetectFFmpeg()
+        {
+            if (_detectingFFmpeg) return;
+            _detectingFFmpeg = true;
+            FFmpegDetectionStatus = LanguageManager.Instance["FFmpegSearching"];
+            var originalFolder = Settings.FFmpeg.FolderPath;
+            try
+            {
+                var executable = await Task.Run(() => FFmpegService.DetectExecutable(true));
+                // 搜索期间手动选择了目录时，保留用户的选择。
+                if (Settings.FFmpeg.FolderPath != originalFolder) {
+                    FFmpegDetectionStatus = Settings.FFmpeg.FolderPath;
+                    return;
+                }
+                if (executable != null)
+                {
+                    Settings.FFmpeg.FolderPath = Path.GetDirectoryName(executable);
+                    FFmpegDetectionStatus = string.Format(LanguageManager.Instance["FFmpegDetected"], executable);
+                }
+                else FFmpegDetectionStatus = LanguageManager.Instance["FFmpegNotDetected"];
+            }
+            catch (Exception e)
+            {
+                FFmpegDetectionStatus = LanguageManager.Instance["FFmpegNotDetected"] + " " + e.Message;
+            }
+            finally { _detectingFFmpeg = false; }
         }
 
         public static IEnumerable<ObjectLocalizer<Alignment>> XAlignments { get; } = new[]
