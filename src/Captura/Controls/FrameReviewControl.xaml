@@ -65,6 +65,12 @@
    <Setter Property="Fill" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}"/>
   </Style>
   <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource ItemText}"/></Style>
+  <Style x:Key="ZoomButton" TargetType="Button" BasedOn="{StaticResource ReviewButton}">
+   <Setter Property="Width" Value="30"/><Setter Property="Height" Value="28"/><Setter Property="MinHeight" Value="28"/>
+   <Setter Property="Padding" Value="4"/><Setter Property="Margin" Value="1,0"/>
+   <Setter Property="Foreground" Value="White"/><Setter Property="Background" Value="#243341"/>
+   <Setter Property="ToolTipService.InitialShowDelay" Value="200"/>
+  </Style>
   </ResourceDictionary>
  </UserControl.Resources>
  <Grid Margin="12,8">
@@ -78,15 +84,28 @@
    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="248"/></Grid.ColumnDefinitions>
    <Grid>
     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <Border x:Name="PreviewSurface" Background="#111827" CornerRadius="8" MouseLeftButtonDown="Preview_MouseDown" Focusable="True" ClipToBounds="True">
-     <Grid Margin="6">
+    <Border x:Name="PreviewSurface" Background="#111827" CornerRadius="8" MouseLeftButtonDown="Preview_MouseDown" MouseMove="Preview_MouseMove" MouseLeftButtonUp="Preview_MouseUp"
+            LostMouseCapture="Preview_LostCapture" PreviewMouseWheel="Preview_MouseWheel" SizeChanged="Preview_SizeChanged" Focusable="True" ClipToBounds="True">
+     <Grid>
+     <ScrollViewer x:Name="PreviewViewport" Margin="6" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" Focusable="False">
+      <Grid x:Name="PreviewCanvas" HorizontalAlignment="Center" VerticalAlignment="Center">
       <MediaElement x:Name="Player" LoadedBehavior="Manual" UnloadedBehavior="Manual" ScrubbingEnabled="True"
                     MediaOpened="Player_Opened" MediaEnded="Player_Ended" MediaFailed="Player_Failed"/>
       <Image x:Name="Still" Stretch="Uniform"/>
+      </Grid>
+     </ScrollViewer>
       <StackPanel x:Name="EmptyPanel" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360">
        <TextBlock Text="将视频或 GIF 拖到这里" Foreground="White" FontSize="20" HorizontalAlignment="Center"/>
        <TextBlock x:Name="EmptyHint" Text="也可点击右上方打开文件，或完成一次录制" Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12"/>
       </StackPanel>
+      <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,10,24,24" Padding="4" Background="#E6111827" CornerRadius="6">
+       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <Button x:Name="ZoomOutButton" Style="{StaticResource ZoomButton}" IsEnabled="False" Click="ZoomOut_Click" ToolTip="缩小预览（也可 Ctrl＋鼠标滚轮）" AutomationProperties.Name="缩小预览"><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-magnify-minus-outline}"/></Button>
+        <TextBlock x:Name="ZoomLabel" Text="1×" Foreground="White" FontSize="11" MinWidth="42" TextAlignment="Center" VerticalAlignment="Center" ToolTip="相对于适应窗口的倍率；放大后按住左键拖动画面"/>
+        <Button x:Name="ZoomInButton" Style="{StaticResource ZoomButton}" IsEnabled="False" Click="ZoomIn_Click" ToolTip="放大预览（也可 Ctrl＋鼠标滚轮）" AutomationProperties.Name="放大预览"><Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-magnify-plus-outline}"/></Button>
+        <Button x:Name="ZoomFitButton" Style="{StaticResource ZoomButton}" Width="48" IsEnabled="False" Content="适应" Click="ZoomFit_Click" ToolTip="恢复适应窗口，重置缩放和位置" AutomationProperties.Name="适应窗口"/>
+       </StackPanel>
+      </Border>
      </Grid>
     </Border>
     <StackPanel Grid.Row="1" Margin="0,8,0,0">
@@ -145,9 +164,11 @@
        <DockPanel Margin="0,0,0,12"><Button Content="关闭" Click="HelpClose_Click" DockPanel.Dock="Right" Padding="6,2"/><TextBlock Text="回看与选帧帮助" FontSize="16" FontWeight="SemiBold"/></DockPanel>
        <TextBlock Text="长视频先打开预览，精确索引在后台建立；完成前可播放和定位，选帧编辑及导出在索引完成后开放。帧号前的“约”表示临时估算。" TextWrapping="Wrap" Margin="0,0,0,12"/>
        <TextBlock Text="选择帧" FontWeight="SemiBold"/>
-       <TextBlock Text="单击缩略图：单选；Ctrl 单击：增减离散帧；Shift 单击：连续选择；Ctrl+Shift 单击：追加连续范围。右上角勾选框直接增减单帧，也支持 Shift 连选。" TextWrapping="Wrap" Margin="0,4,0,12"/>
+       <TextBlock Text="单击缩略图只预览，不改变勾选。右上角勾选框独立增减导出帧，不跳转预览，也支持 Shift 连选。Ctrl 单击可显式增减离散帧；Shift 单击选择连续范围；Ctrl+Shift 单击追加范围。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="播放与定位" FontWeight="SemiBold"/>
-       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。左右键沿用最近点击的 1 帧 / 1 秒 / 5 秒按钮步长；六个步进按钮支持按住连续移动。逐帧开关仍可手动切换，Shift+左右键可按 5 秒移动。拖动进度条会持续更新画面。普通左右键移动单选；Shift+左右键扩展范围，Ctrl+Shift 追加范围。多选后预览时间顺序第一帧，播放与拖动不清除选择。" TextWrapping="Wrap" Margin="0,4,0,12"/>
+       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。左右键沿用最近点击的 1 帧 / 1 秒 / 5 秒按钮步长；六个步进按钮支持按住连续移动。逐帧开关仍可手动切换，Shift+左右键可按 5 秒移动。拖动进度条会持续更新画面。普通左右键、播放和拖动只改变查看位置，不改勾选。逐帧时 Shift+左右键可显式扩展勾选范围，Ctrl+Shift 追加。多选后不会自动跳回第一张。" TextWrapping="Wrap" Margin="0,4,0,12"/>
+       <TextBlock Text="预览缩放" FontWeight="SemiBold"/>
+       <TextBlock Text="右下角放大、缩小或在预览区按 Ctrl＋鼠标滚轮，可在适应窗口的 0.25—8 倍间缩放。放大后按住左键拖动画面；点击“适应”重置倍率和位置。切换帧保留倍率，打开新文件恢复适应。窗口右上角可最大化／还原，也可拖动窗口边缘调整大小或双击顶部计时区域。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="快捷键与导出" FontWeight="SemiBold"/>
        <TextBlock Text="预览或时间轴内：空格播放 / 暂停；Ctrl+Enter 增减当前帧；Ctrl+A 全选；Ctrl+Shift+A 清空；Home / End 定位首尾。输入框保留原有键盘行为。" TextWrapping="Wrap" Margin="0,4,0,8"/>
        <TextBlock Text="在右侧选择图片、视频或 GIF，然后导出所选帧。按原时间顺序导出，视频和 GIF 不含音频；完成后可打开导出目录。左上数字是帧号，橙色标记是当前查看，勾选蓝底是导出选择。" TextWrapping="Wrap"/>

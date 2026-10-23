@@ -6,7 +6,8 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 COMMIT = "9e04201d4557e729822fb57f62a316c3dea1d4a8"
 NAMES = ["skip-previous", "rewind", "step-backward", "play", "pause",
-         "step-forward", "fast-forward", "skip-next", "help-circle-outline"]
+         "step-forward", "fast-forward", "skip-next", "help-circle-outline",
+         "magnify-plus-outline", "magnify-minus-outline", "window-maximize", "window-restore"]
 DEST = ROOT / "src/Captura/Images/PlayerIcons"
 DEST.mkdir(parents=True, exist_ok=True)
 resources = ['<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"',

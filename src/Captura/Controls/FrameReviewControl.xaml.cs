@@ -51,7 +51,7 @@ namespace Captura
         {
             InitializeComponent();
             FrameStrip.ItemContainerGenerator.StatusChanged += (sender, e) => ScheduleThumbnails();
-            Loaded += (sender, e) => ScheduleThumbnails();
+            Loaded += (sender, e) => { SizeZoomCanvas(); UpdateZoomState(); ScheduleThumbnails(); };
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
             _timer.Tick += (_, __) => {
                 if (!_playing || _media == null) return;
@@ -85,6 +85,7 @@ namespace Captura
             Pause(); Player.Close(); Player.Source = null; Still.Source = null; _cache.Clear();
             _gif?.Dispose(); _gif = null;
             _media = null; _timeline = null; _timelineRevision++; _pendingThumbnailIndices = null; _selection.Reset(0); _markedSelection.Clear(); _tiles.Clear(); _thumbnails.Clear();
+            ResetPreviewZoom();
             FrameStrip.ItemsSource = null; _currentTile = -1; RefreshSelection();
             _displayedIndex = -1; _index = _rangeStart = 0;
             FrameMode.IsChecked = false;
@@ -184,10 +185,9 @@ namespace Captura
         {
             if (_media == null || _load != null || _edit != null) return;
             Pause(); _index = Math.Max(0, Math.Min(FrameCount - 1, _index + delta));
-            if (delta != 0 && CanSelectFrames && _selected.Count == 1) { _selection.Click(_index, false, false); RefreshSelection(); }
             UpdatePosition(); RevealCurrent(); await ShowFrameAsync();
         }
-        public void Suspend() { Pause(); _edit?.Cancel(); _frame?.Cancel(); _pendingThumbnailIndices = null; _thumbnailRequest?.Cancel(); }
+        public void Suspend() { EndPan(); Pause(); _edit?.Cancel(); _frame?.Cancel(); _pendingThumbnailIndices = null; _thumbnailRequest?.Cancel(); }
         public void ResumePreview() => ScheduleThumbnails();
         void Pause()
         {
@@ -239,14 +239,8 @@ namespace Captura
         void ToggleSelected()
         {
             if (!CanSelectFrames) return;
-            if (_playing) { Pause(); Step(0); }
             _selection.Toggle(_index);
-            ShowSelection(_index);
-        }
-        void ShowSelection(int fallback)
-        {
-            Pause(); _index = _selection.SelectionPreview(fallback);
-            RefreshSelection(); UpdatePosition(); _ = ShowFrameAsync();
+            RefreshSelection();
         }
         void RefreshSelection()
         {
@@ -267,6 +261,7 @@ namespace Captura
             if (ExportButton != null) ExportButton.IsEnabled = CanSelectFrames && _selected.Count > 0;
             FrameMode.IsEnabled = PreviousButton.IsEnabled = NextButton.IsEnabled = CanSelectFrames;
             AllButton.IsEnabled = ClearButton.IsEnabled = RangeStartButton.IsEnabled = RangeEndButton.IsEnabled = CanSelectFrames;
+            UpdateZoomState();
             UpdateEditState();
         }
         void RevealCurrent()
@@ -306,7 +301,7 @@ namespace Captura
             if (e.Key == Key.Y && modifiers == ModifierKeys.Control) { RedoEdit_Click(this, e); e.Handled = true; return; }
             if (modifiers.HasFlag(ModifierKeys.Alt)) return;
             if ((e.Key == Key.Return || e.Key == Key.Enter) && modifiers == ModifierKeys.Control) ToggleSelected();
-            else if (e.Key == Key.A && modifiers == ModifierKeys.Control) { if (CanSelectFrames) { _selection.SelectAll(); ShowSelection(_index); } }
+            else if (e.Key == Key.A && modifiers == ModifierKeys.Control) { if (CanSelectFrames) { _selection.SelectAll(); RefreshSelection(); } }
             else if (e.Key == Key.A && modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) { if (CanSelectFrames) { _selection.Clear(); RefreshSelection(); } }
             else if (e.Key == Key.Home || e.Key == Key.End) {
                 Pause(); _index = e.Key == Key.Home ? 0 : FrameCount - 1;
@@ -319,13 +314,10 @@ namespace Captura
                 if (FrameMode.IsChecked == true && ExactIndexReady) {
                     var extend = modifiers.HasFlag(ModifierKeys.Shift) && CanSelectFrames;
                     var target = Math.Max(0, Math.Min(FrameCount - 1, (extend ? _selection.RangeEnd : _index) + direction));
-                    if (CanSelectFrames) {
-                        if (extend) _selection.SelectRange(_selection.Anchor, target, modifiers.HasFlag(ModifierKeys.Control));
-                        else _selection.Click(target, false, false);
-                        ShowSelection(target);
-                    } else { Pause(); _index = target; Step(0); }
+                    if (extend) { _selection.SelectRange(_selection.Anchor, target, modifiers.HasFlag(ModifierKeys.Control)); RefreshSelection(); }
+                    Pause(); _index = target; Step(0);
                 }
-                else if (!modifiers.HasFlag(ModifierKeys.Control)) SeekSeconds(direction * (modifiers.HasFlag(ModifierKeys.Shift) ? 5 : _secondsStep), true);
+                else if (!modifiers.HasFlag(ModifierKeys.Control)) SeekSeconds(direction * (modifiers.HasFlag(ModifierKeys.Shift) ? 5 : _secondsStep));
                 else return;
             }
             else if (e.Key == Key.Space && modifiers == ModifierKeys.None) { if (!e.IsRepeat) TogglePlay(); }
@@ -333,13 +325,12 @@ namespace Captura
             e.Handled = true;
         }
 
-        void SeekSeconds(int seconds, bool keyboard = false)
+        void SeekSeconds(int seconds)
         {
             if (_media == null || _load != null || _edit != null) return;
             var resume = _playing;
             var time = _playing ? (_gif != null || Edited ? _gifStartTime + _gifClock.Elapsed.TotalSeconds : Player.Position.TotalSeconds) : FrameTimes[_index];
             Pause(); _index = FrameAt(Math.Max(0, Math.Min(FrameDuration, time + seconds)));
-            if (CanSelectFrames && !resume && (keyboard || _selected.Count == 1)) { _selection.Click(_index, false, false); RefreshSelection(); }
             if (resume && _index < FrameCount - 1) TogglePlay(); else Step(0);
             UpdatePosition();
         }
@@ -355,14 +346,13 @@ namespace Captura
         {
             var container = Ancestor<ListBoxItem>(e.OriginalSource as DependencyObject);
             if (!(container?.DataContext is FrameTile tile) || _media == null) return;
+            // 勾选框保留原生 Click；卡片正文只查看，不能顺带替换导出集合。
+            if (Ancestor<CheckBox>(e.OriginalSource as DependencyObject) != null) return;
             if (_edit != null) { e.Handled = true; return; }
             e.Handled = true; FrameStrip.Focus();
-            if (CanSelectFrames) {
-                SelectTile(tile, Ancestor<CheckBox>(e.OriginalSource as DependencyObject) != null);
-            }
+            if (CanSelectFrames && (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) != 0) { SelectTile(tile, false); RefreshSelection(); }
             if (ExactIndexReady) FrameMode.IsChecked = true;
-            if (CanSelectFrames) ShowSelection(tile.Index);
-            else { Pause(); _index = tile.Index; UpdatePosition(); _ = ShowFrameAsync(); }
+            Pause(); _index = tile.Index; UpdatePosition(); _ = ShowFrameAsync();
         }
         void FrameStrip_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -378,8 +368,7 @@ namespace Captura
         void TileCheck_Click(object sender, RoutedEventArgs e)
         {
             if (!CanSelectFrames || !((sender as FrameworkElement)?.DataContext is FrameTile tile)) return;
-            e.Handled = true; SelectTile(tile, true);
-            FrameMode.IsChecked = true; ShowSelection(tile.Index);
+            e.Handled = true; SelectTile(tile, true); RefreshSelection();
             FrameStrip.Focus();
         }
         void SelectTile(FrameTile tile, bool checkbox)
@@ -487,13 +476,13 @@ namespace Captura
         void HelpClose_Click(object sender, RoutedEventArgs e) { ReviewHelp.IsOpen = false; }
         void Select_Click(object sender, RoutedEventArgs e) { FrameMode.IsChecked = true; ToggleSelected(); Focus(); }
         void Clear_Click(object sender, RoutedEventArgs e) { if (!CanSelectFrames) return; _selection.Clear(); RefreshSelection(); }
-        void All_Click(object sender, RoutedEventArgs e) { if (!CanSelectFrames) return; _selection.SelectAll(); ShowSelection(_index); }
+        void All_Click(object sender, RoutedEventArgs e) { if (!CanSelectFrames) return; _selection.SelectAll(); RefreshSelection(); }
         void RangeStart_Click(object sender, RoutedEventArgs e) { if (!CanSelectFrames) return; _rangeStart = _index; _selection.SetAnchor(_index); RangeStartButton.Content = $"起点：第 {_index + 1} 帧"; }
         void RangeEnd_Click(object sender, RoutedEventArgs e)
         {
             if (!CanSelectFrames) return;
             _selection.SelectRange(_rangeStart, _index, true);
-            ShowSelection(_index);
+            RefreshSelection();
         }
         async void Open_Click(object sender, RoutedEventArgs e)
         {
@@ -507,7 +496,6 @@ namespace Captura
             e.Handled = true;
             if (e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0) await OpenMediaAsync(files[0]);
         }
-        void Preview_MouseDown(object sender, MouseButtonEventArgs e) { PreviewSurface.Focus(); e.Handled = true; }
         void Player_Opened(object sender, RoutedEventArgs e)
         {
             if (_gif != null || Edited) return;
@@ -566,7 +554,7 @@ namespace Captura
         }
         public void Dispose()
         {
-            _disposed = true; _indexing?.Cancel(); Pause(); _edit?.Cancel(); _load?.Cancel(); _frame?.Cancel(); _export?.Cancel(); _thumbnailRequest?.Cancel();
+            _disposed = true; EndPan(); _indexing?.Cancel(); Pause(); _edit?.Cancel(); _load?.Cancel(); _frame?.Cancel(); _export?.Cancel(); _thumbnailRequest?.Cancel();
             _timer.Stop(); Player.Close(); Still.Source = null; _cache.Clear(); _thumbnails.Clear(); _tiles.Clear();
             _gif?.Dispose(); _gif = null;
         }

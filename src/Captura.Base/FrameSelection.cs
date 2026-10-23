@@ -14,7 +14,6 @@ namespace Captura
         public int Current { get; private set; }
         public int Anchor { get; private set; }
         public int RangeEnd { get; private set; }
-        public int SelectionPreview(int fallback) { Validate(fallback); return Count > 0 ? _selected.Min : fallback; }
 
         public void Reset(int frameCount)
         {
@@ -31,14 +30,14 @@ namespace Captura
         {
             Validate(frame);
             if (!_selected.Remove(frame)) _selected.Add(frame);
-            Current = Anchor = RangeEnd = frame;
+            Anchor = RangeEnd = frame;
         }
         public void Click(int frame, bool control, bool shift)
         {
             Validate(frame);
             if (shift) SelectRange(Anchor, frame, control);
             else if (control) Toggle(frame);
-            else { _selected.Clear(); _selected.Add(frame); Current = Anchor = RangeEnd = frame; }
+            else { _selected.Clear(); _selected.Add(frame); Anchor = RangeEnd = frame; }
         }
         public void SetAnchor(int frame) { Validate(frame); Anchor = RangeEnd = frame; }
         public void SelectRange(int from, int to, bool add)
@@ -46,7 +45,7 @@ namespace Captura
             Validate(from); Validate(to);
             if (!add) _selected.Clear();
             for (var i = Math.Min(from, to); i <= Math.Max(from, to); i++) _selected.Add(i);
-            Current = RangeEnd = to;
+            RangeEnd = to;
         }
         public void SelectAll() { for (var i = 0; i < FrameCount; i++) _selected.Add(i); }
         public void Clear() => _selected.Clear();

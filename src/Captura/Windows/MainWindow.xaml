@@ -14,6 +14,7 @@
         BorderThickness="1"
         BorderBrush="{DynamicResource Accent}"
         Topmost="{Binding Settings.UI.MainWindowTopmost}">
+    <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Controls/PlayerIcons.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
     <WindowChrome.WindowChrome>
         <WindowChrome GlassFrameThickness="1"
                       UseAeroCaptionButtons="False"
@@ -239,6 +240,9 @@
                                             IconData="{Binding Icons.Minimize, Source={StaticResource ServiceLocator}}"
                                             Opacity="0.7"
                                             DockPanel.Dock="Right"/>
+
+                        <local:ModernButton x:Name="MaximizeWindowButton" ToolTip="最大化窗口" AutomationProperties.Name="最大化窗口" Click="MaximizeButton_Click"
+                                            IconData="{StaticResource PlayerIcon-window-maximize}" Opacity="0.7" Visibility="Collapsed" DockPanel.Dock="Right"/>
 
                         <Grid Margin="0,-2"
                               PreviewMouseLeftButtonDown="Grid_PreviewMouseLeftButtonDown"

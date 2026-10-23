@@ -16,21 +16,21 @@ namespace Captura.Tests
             for (var frame = 17; frame <= 22; frame++) Assert.Equal(17, FrameViewport.Reveal(frame, 17, 6.7, 400));
         }
         [Fact]
-        public void KeyboardSelectionTravelsAcrossViewportBeforeFollowingEitherEdge()
+        public void KeyboardViewingTravelsAcrossViewportWithoutChangingExportMarks()
         {
             var selection = new FrameSelection(); selection.Reset(400); selection.Click(20, false, false);
             double offset = 17;
             for (var frame = 21; frame <= 35; frame++) {
-                selection.Click(frame, false, false); selection.View(selection.SelectionPreview(frame));
+                selection.View(frame);
                 offset = FrameViewport.Reveal(selection.Current, offset, 6, 400);
-                Assert.Equal(new[] { frame }, selection.Snapshot());
+                Assert.Equal(new[] { 20 }, selection.Snapshot());
                 Assert.Equal(Math.Max(17, frame - 5), offset);
             }
             Assert.Equal(30, offset);
             for (var frame = 34; frame >= 10; frame--) {
-                selection.Click(frame, false, false); selection.View(selection.SelectionPreview(frame));
+                selection.View(frame);
                 offset = FrameViewport.Reveal(selection.Current, offset, 6, 400);
-                Assert.Equal(new[] { frame }, selection.Snapshot());
+                Assert.Equal(new[] { 20 }, selection.Snapshot());
                 Assert.Equal(Math.Min(30, frame), offset);
             }
         }
@@ -45,33 +45,34 @@ namespace Captura.Tests
             Assert.Equal(17, FrameViewport.Reveal(20, 17, 0, 400));
         }
         [Fact]
-        public void MultiSelectionPreviewUsesFirstChronologicalFrameAndUpdatesAfterRemoval()
+        public void ViewingAndCheckingOneThreeSevenAreIndependentInBothDirections()
         {
             var selection = new FrameSelection(); selection.Reset(400);
-            selection.Click(19, false, false); Assert.Equal(19, selection.SelectionPreview(0));
-            selection.Toggle(30); Assert.Equal(19, selection.SelectionPreview(30));
-            selection.Toggle(4); Assert.Equal(4, selection.SelectionPreview(4));
-            selection.Toggle(4); Assert.Equal(19, selection.SelectionPreview(4));
-            selection.Toggle(19); Assert.Equal(30, selection.SelectionPreview(19));
-            selection.Toggle(30); Assert.Equal(30, selection.SelectionPreview(30));
-            selection.SelectAll(); Assert.Equal(0, selection.SelectionPreview(30));
+            selection.Toggle(0); selection.View(2);
+            Assert.Equal(new[] { 0 }, selection.Snapshot()); Assert.Equal(2, selection.Current);
+            selection.Toggle(2); Assert.Equal(new[] { 0, 2 }, selection.Snapshot()); Assert.Equal(2, selection.Current);
+            selection.View(6); Assert.Equal(new[] { 0, 2 }, selection.Snapshot());
+            selection.Toggle(6); Assert.Equal(new[] { 0, 2, 6 }, selection.Snapshot()); Assert.Equal(6, selection.Current);
+            selection.Toggle(0); Assert.Equal(new[] { 2, 6 }, selection.Snapshot()); Assert.Equal(6, selection.Current);
+            selection.SelectAll(); Assert.Equal(6, selection.Current);
+            selection.Clear(); Assert.Empty(selection.Selected); Assert.Equal(6, selection.Current);
         }
         [Fact]
-        public void RangeKeyboardCursorSurvivesPreviewingFirstSelectedFrame()
+        public void RangeCursorAndMarksAreIndependentOfViewedFrame()
         {
             var selection = new FrameSelection(); selection.Reset(100); selection.Click(20, false, false);
             for (var end = 21; end <= 25; end++) {
                 selection.SelectRange(selection.Anchor, selection.RangeEnd + 1, false);
-                selection.View(selection.SelectionPreview(selection.RangeEnd));
-                Assert.Equal(end, selection.RangeEnd); Assert.Equal(20, selection.Current);
+                selection.View(70);
+                Assert.Equal(end, selection.RangeEnd); Assert.Equal(70, selection.Current);
                 Assert.Equal(Enumerable.Range(20, end - 19), selection.Snapshot());
             }
             selection.SelectRange(selection.Anchor, selection.RangeEnd - 1, false);
-            selection.View(selection.SelectionPreview(selection.RangeEnd));
-            Assert.Equal(24, selection.RangeEnd); Assert.Equal(20, selection.Anchor); Assert.Equal(20, selection.Current);
-            selection.SelectRange(selection.Anchor, 18, false); selection.View(selection.SelectionPreview(18));
-            Assert.Equal(new[] { 18, 19, 20 }, selection.Snapshot()); Assert.Equal(18, selection.Current);
+            Assert.Equal(24, selection.RangeEnd); Assert.Equal(20, selection.Anchor); Assert.Equal(70, selection.Current);
+            selection.SelectRange(selection.Anchor, 18, false);
+            Assert.Equal(new[] { 18, 19, 20 }, selection.Snapshot()); Assert.Equal(70, selection.Current);
             selection.Click(19, false, false); Assert.Equal(new[] { 19 }, selection.Snapshot());
+            Assert.Equal(70, selection.Current);
         }
         [Fact]
         public void ControlClickKeepsArbitraryDiscreteFramesAndCanRemoveOne()
@@ -81,7 +82,48 @@ namespace Captura.Tests
             Assert.Equal(new[] { 2, 17, 63 }, selection.Snapshot());
             selection.Click(17, true, false);
             Assert.Equal(new[] { 2, 63 }, selection.Snapshot());
-            Assert.Equal(17, selection.Current);
+            Assert.Equal(0, selection.Current);
+        }
+        [Fact]
+        public void ZoomStepsClampAtLimitsAndRecoverFromInvalidScale()
+        {
+            Assert.Equal(1.25, PreviewZoom.Step(1, 1)); Assert.Equal(1, PreviewZoom.Step(1.25, -1));
+            Assert.Equal(8, PreviewZoom.Step(1, 1000)); Assert.Equal(0.25, PreviewZoom.Step(1, -1000));
+            Assert.Equal(1, PreviewZoom.Clamp(double.NaN)); Assert.Equal(8, PreviewZoom.Clamp(double.PositiveInfinity));
+            Assert.Equal(0.25, PreviewZoom.Clamp(0));
+        }
+        [Fact]
+        public void ZoomKeepsPointerOverSameContentPixel()
+        {
+            var anchor = PreviewZoom.Anchor(250, 0, 1000, 1000);
+            var offset = PreviewZoom.Offset(anchor, 250, 2000, 1000);
+            Assert.Equal(0.25, anchor); Assert.Equal(250, offset);
+            Assert.Equal(250, anchor * 2000 - offset);
+        }
+        [Fact]
+        public void ZoomAfterPanningUsesScrolledContentCoordinates()
+        {
+            var anchor = PreviewZoom.Anchor(300, 500, 2000, 1000);
+            var offset = PreviewZoom.Offset(anchor, 300, 4000, 1000);
+            Assert.Equal(0.4, anchor); Assert.Equal(1300, offset);
+            Assert.Equal(300, anchor * 4000 - offset);
+        }
+        [Fact]
+        public void ZoomAccountsForCenteredLetterboxMargins()
+        {
+            Assert.Equal(0, PreviewZoom.Anchor(250, 0, 500, 1000));
+            Assert.Equal(0.5, PreviewZoom.Anchor(500, 0, 500, 1000));
+            Assert.Equal(1, PreviewZoom.Anchor(750, 0, 500, 1000));
+            Assert.Equal(0, PreviewZoom.Anchor(100, 0, 500, 1000));
+            Assert.Equal(0.5, PreviewZoom.Anchor(100, 0, 0, 1000));
+        }
+        [Fact]
+        public void ZoomOffsetsClampWhenFittingOrReachingImageBoundary()
+        {
+            Assert.Equal(0, PreviewZoom.Offset(0.5, 400, 200, 800));
+            Assert.Equal(1200, PreviewZoom.Offset(1, 0, 2000, 800));
+            Assert.Equal(0, PreviewZoom.Offset(0, 800, 2000, 800));
+            Assert.Equal(1000, PreviewZoom.Offset(0.8, 600, 2000, 800));
         }
         [Fact]
         public void ViewingAndPlaybackPositionsDoNotReplaceSelection()

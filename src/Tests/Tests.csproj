@@ -7,10 +7,17 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Captura.Base\Captura.Base.csproj" />
+    <ProjectReference Include="..\Captura\Captura.csproj" />
     <ProjectReference Include="..\Captura.Core\Captura.Core.csproj" />
     <ProjectReference Include="..\Captura.Fakes\Captura.Fakes.csproj" />
     <ProjectReference Include="..\Captura.Loc\Captura.Loc.csproj" />
     <ProjectReference Include="..\Screna\Screna.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationFramework" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.8.3" />

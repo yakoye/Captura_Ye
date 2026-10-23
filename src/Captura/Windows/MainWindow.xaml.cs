@@ -21,6 +21,7 @@ namespace Captura
             Instance = this;
             
             InitializeComponent();
+            StateChanged += (sender, e) => UpdateMaximizeButton();
 
             _helper = ServiceProvider.Get<MainWindowHelper>();
 
@@ -106,6 +107,8 @@ namespace Captura
                 ResizeMode = ResizeMode.CanMinimize;
             }
             _expandedLayout = expanded;
+            MaximizeWindowButton.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+            UpdateMaximizeButton();
         }
 
         void WakeApp()
@@ -138,12 +141,27 @@ namespace Captura
 
         void Grid_PreviewMouseLeftButtonDown(object Sender, MouseButtonEventArgs Args)
         {
+            if (Args.ClickCount == 2 && _expandedLayout) { MaximizeButton_Click(Sender, Args); Args.Handled = true; return; }
             DragMove();
 
             Args.Handled = true;
         }
 
         void MinButton_Click(object Sender, RoutedEventArgs Args) => SystemCommands.MinimizeWindow(this);
+        void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_expandedLayout) return;
+            if (WindowState == WindowState.Maximized) SystemCommands.RestoreWindow(this);
+            else SystemCommands.MaximizeWindow(this);
+        }
+        void UpdateMaximizeButton()
+        {
+            if (MaximizeWindowButton == null) return;
+            var maximized = WindowState == WindowState.Maximized;
+            MaximizeWindowButton.ToolTip = maximized ? "还原窗口" : "最大化窗口";
+            System.Windows.Automation.AutomationProperties.SetName(MaximizeWindowButton, (string)MaximizeWindowButton.ToolTip);
+            MaximizeWindowButton.IconData = (System.Windows.Media.Geometry)FindResource(maximized ? "PlayerIcon-window-restore" : "PlayerIcon-window-maximize");
+        }
 
         void CloseButton_Click(object Sender, RoutedEventArgs Args)
         {
