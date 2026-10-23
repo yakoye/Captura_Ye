@@ -46,8 +46,15 @@
 
 原生自动化接口不能持续按住 Ctrl 再滚轮，因此 Ctrl＋滚轮组合输入由事件接线和锚点数学测试覆盖，未计作真实组合鼠标验收。按钮缩放和平移已实测；未穷尽 DPI、所有编码、所有缩放档位和长按连发。最终便携包尝试可见捕获时工具返回 no screenshot targets，保留该限制，不据此判定产品崩溃或通过。已释放桌面给其他开发会话，继续完成可自动化的离屏、构建与发布流程，不等待视觉时段。
 
+另补跑已有 `WindowTests` 两项及 `ConsoleStartTests.StartSharpAvi` 一项，3/3 通过，失败 0、跳过 0；证据 `test-v912-additional.log` 与 `temp/review-v912-additional/additional.trx`。合计本轮 88 项自动化通过，其中统一发布脚本运行 85 项，另补跑 3 项。剩余旧测试中的 `StartSharpAviFixedDuration`、`ScreenShotTabs` 原有 Skip 标记保留：固定时长录制已由发布脚本的实际两秒 AVI／MP4 覆盖；旧 White 标签截图夹具需要启动并操作可见窗口，未作为离屏结果。没有把这些旧跳过项计为通过。
+
 ## 发布与归档
 
-使用既有英文命名入口和统一发布脚本。上传后回下载全部 5 个资产，核对大小与 SHA-256 后公开，再双归档；旧版本保留、同名冲突不覆盖。
+使用既有英文命名入口和统一发布脚本，命令 `scripts/release.ps1 -ReusePackage -Publish -Archive`。提交及标签为 `cd4e102d`／`v9.0.12`，已推送 `publish/master`；GitHub 发行版现场返回 `isDraft: false`，链接 [v9.0.12](https://github.com/yakoye/Captura_Ye/releases/tag/v9.0.12)。全部 5 个资产回下载后大小及 SHA-256 匹配，再公开发行版并双归档；旧版本保留。
 
-目标目录为 `C:\Users\color\Downloads\yakoye-release\Captura_Ye\v9.0.12` 与 `\\192.168.7.100\Downloads\yakoye-release\Captura_Ye\v9.0.12`，以 `publish-v912-pipeline.log` 与 GitHub 现场状态确认最终结果。
+`C:\Users\color\Downloads\yakoye-release\Captura_Ye\v9.0.12` 与 `\\192.168.7.100\Downloads\yakoye-release\Captura_Ye\v9.0.12` 两处均完成，每处 5 个文件通过 SHA-256。证据 `publish-v912-pipeline.log` 与 `temp/logs/20261023-120315/release.log`，脚本退出代码 0。
+
+| 资产 | 字节 | SHA-256 |
+| --- | ---: | --- |
+| CapturaYe-v9.0.12-Setup.exe | 4683081 | `62ac09936803d441b858cba930c411f9a6e720a0343b7c0adcd15d8f819e613c` |
+| CapturaYe-v9.0.12-Portable.zip | 3717649 | `a3907daa0e85900932072b07ea2635891cf2a56417600fca24c6c7d5af86585a` |
