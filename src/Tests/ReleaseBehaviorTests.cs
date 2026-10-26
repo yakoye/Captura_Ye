@@ -105,6 +105,32 @@ namespace Captura.Tests
             return root;
         }
 
+        [Fact]
+        public void SuccessfulSourceSelectionAndReselectionCollapseButCancellationAndRestoreDoNot()
+        {
+            var settings = ServiceProvider.Get<Settings>(); var originalExpanded = settings.UI.Expanded;
+            try {
+                settings.UI.Expanded = true;
+                var provider = new Moq.Mock<Captura.Video.IVideoSourceProvider>();
+                provider.Setup(p => p.SupportsStepsMode).Returns(true);
+                provider.Setup(p => p.OnSelect()).Returns(false);
+                var model = new Captura.ViewModels.VideoSourcesViewModel(null, null, new[] { provider.Object }, settings);
+                Assert.True(settings.UI.Expanded);
+                model.SelectedVideoSourceKind = provider.Object;
+                Assert.True(settings.UI.Expanded); Assert.Null(model.SelectedVideoSourceKind);
+                provider.Setup(p => p.OnSelect()).Returns(true);
+                model.SelectedVideoSourceKind = provider.Object;
+                Assert.False(settings.UI.Expanded); Assert.Same(provider.Object, model.SelectedVideoSourceKind);
+                settings.UI.Expanded = true;
+                model.ReselectSource(); Assert.False(settings.UI.Expanded);
+                settings.UI.Expanded = true;
+                provider.Setup(p => p.OnSelect()).Returns(false);
+                model.ReselectSource(); Assert.True(settings.UI.Expanded);
+                model.RestoreSourceKind(null); model.RestoreSourceKind(provider.Object);
+                Assert.True(settings.UI.Expanded);
+            } finally { settings.UI.Expanded = originalExpanded; }
+        }
+
         static string CreateCandidate(string Root, string Name)
         {
             var directory = Path.Combine(Root, Name);

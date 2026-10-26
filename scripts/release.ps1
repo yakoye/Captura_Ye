@@ -127,10 +127,10 @@ try {
         Run 'dotnet' @('build','src\Captura.Console\Captura.Console.csproj','-c','Release','-v','minimal')
         $frameTests = '(FullyQualifiedName~FrameReviewTests|FullyQualifiedName~FrameEditingTests|FullyQualifiedName~FrameReviewControlTests)'
         if (!(Get-Command ffmpeg.exe -ErrorAction SilentlyContinue)) {
-            $frameTests = '((FullyQualifiedName~FrameReviewTests&FullyQualifiedName!~ExactFramePreviewMatchesBatchPngAndCompositions&FullyQualifiedName!~LargeSelectionCrossesBatchBoundaryWithoutLosingFrames&FullyQualifiedName!~RunningDecoderCanBeCancelled)|(FullyQualifiedName~FrameEditingTests&FullyQualifiedName!~FFmpeg)|FullyQualifiedName~FrameReviewControlTests)'
-            Write-Host '系统 PATH 未找到 FFmpeg：跳过 20 项媒体集成测试，仍运行 35 项帧逻辑及 WPF 离屏测试。'
+            $frameTests = '((FullyQualifiedName~FrameReviewTests&FullyQualifiedName!~ExactFramePreviewMatchesBatchPngAndCompositions&FullyQualifiedName!~LargeSelectionCrossesBatchBoundaryWithoutLosingFrames&FullyQualifiedName!~RunningDecoderCanBeCancelled)|(FullyQualifiedName~FrameEditingTests&FullyQualifiedName!~FFmpeg)|(FullyQualifiedName~FrameReviewControlTests&FullyQualifiedName!~ExportFormatSelectionProducesOnlyRequestedFiles))'
+            Write-Host '系统 PATH 未找到 FFmpeg：排除需要 FFmpeg 的媒体集成测试，继续运行帧逻辑及 WPF 离屏检查。'
         }
-        $testFilter = 'FullyQualifiedName~PropertyStoreTests|FullyQualifiedName~RecorderTests|FullyQualifiedName~AudioFileWriterTests|FullyQualifiedName~ImageProviderTests|FullyQualifiedName~ReleaseBehaviorTests|' + $frameTests
+        $testFilter = 'FullyQualifiedName~PropertyStoreTests|FullyQualifiedName~RecorderTests|FullyQualifiedName~AudioFileWriterTests|FullyQualifiedName~ImageProviderTests|FullyQualifiedName~ReleaseBehaviorTests|FullyQualifiedName~WindowTests|FullyQualifiedName=Captura.Tests.Console.ConsoleStartTests.StartSharpAvi|' + $frameTests
         $previousWpfArtifacts = $env:CAPTURA_WPF_TEST_ARTIFACTS
         try {
             $env:CAPTURA_WPF_TEST_ARTIFACTS = Join-Path $logRoot 'wpf-offscreen'

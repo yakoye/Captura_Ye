@@ -38,9 +38,12 @@
                     长视频先预览、后台建立精确索引；方向键跟随最近步长，步进按钮支持长按，拖动进度条持续更新画面。<LineBreak/>
                     支持视频/GIF 拖入、按秒快进、逐帧查看，以及选中帧导出 PNG、视频或 GIF。<LineBreak/>
                     预览支持放大缩小、Ctrl＋滚轮、拖动和适应窗口；主窗口支持最大化／还原。<LineBreak/>
+                    单击预览并设置范围起点，双击或勾选框增减选择；橙框查看、蓝底选中，时间轴可取消选中。<LineBreak/>
+                    折叠和展开保持宽度，选择录制目标或开始录制自动折叠；导出面板收窄，缩略图缩至 75%。<LineBreak/>
+                    MP4/GIF 导出不再附带中间 PNG，完成后可直接打开导出文件。<LineBreak/>
                     支持截图、屏幕录制、音频录制、摄像头和叠加层。MP4 等格式需要 FFmpeg。<LineBreak/>
                     项目仓库：<Hyperlink Command="{Binding HyperlinkCommand}" CommandParameter="https://github.com/yakoye/Captura_Ye">yakoye/Captura_Ye</Hyperlink><LineBreak/>
-                    发行日期：2026-10-23
+                    发行日期：2026-10-26
                 </TextBlock>
 
                 <WrapPanel HorizontalAlignment="Center">

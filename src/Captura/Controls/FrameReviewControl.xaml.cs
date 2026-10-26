@@ -46,6 +46,7 @@ namespace Captura
         Task _frameWorker;
         int? _frameTarget;
         string _output;
+        string _exportedMedia;
 
         public FrameReviewControl()
         {
@@ -127,6 +128,7 @@ namespace Captura
         void UpdatePosition()
         {
             if (_media == null) return;
+            FitPreviewSurface();
             _selection.View(_index);
             _updating = true; Timeline.Value = _index; _updating = false;
             FrameNumberLabel.Text = (_media.IsApproximate ? "约 " : "") + $"{_index + 1} / {FrameCount} 帧";
@@ -144,6 +146,7 @@ namespace Captura
             _frameTarget = _index;
             if (_cache.TryGetValue(_index, out var cached)) {
                 Still.Source = cached; Still.Visibility = Visibility.Visible; _displayedIndex = _index;
+                FitPreviewSurface();
             } else if (_gif == null && !Edited && _playerReady) {
                 // 系统播放器先提供拖动中的即时画面，后台补上精确解码结果。
                 Player.Position = TimeSpan.FromSeconds(FrameTimes[_index]); Player.Pause(); Still.Visibility = Visibility.Collapsed;
@@ -173,6 +176,7 @@ namespace Captura
                     // 若最新目标已命中缓存，不允许旧解码结果把画面倒退。
                     if (index == _index || !_cache.ContainsKey(_index)) {
                         Still.Source = bitmap; Still.Visibility = Visibility.Visible; _displayedIndex = index;
+                        FitPreviewSurface();
                     }
                 }
             }
@@ -261,6 +265,8 @@ namespace Captura
             if (ExportButton != null) ExportButton.IsEnabled = CanSelectFrames && _selected.Count > 0;
             FrameMode.IsEnabled = PreviousButton.IsEnabled = NextButton.IsEnabled = CanSelectFrames;
             AllButton.IsEnabled = ClearButton.IsEnabled = RangeStartButton.IsEnabled = RangeEndButton.IsEnabled = CanSelectFrames;
+            ClearTimelineButton.IsEnabled = CanSelectFrames && _selected.Count > 0;
+            ExportFormat.IsEnabled = _export == null;
             UpdateZoomState();
             UpdateEditState();
         }
@@ -307,15 +313,12 @@ namespace Captura
                 Pause(); _index = e.Key == Key.Home ? 0 : FrameCount - 1;
                 UpdatePosition(); RevealCurrent(); _ = ShowFrameAsync();
             }
-            else if (e.Key == Key.PageUp || e.Key == Key.PageDown) Step((e.Key == Key.PageUp ? -1 : 1) * Math.Max(1, (int)(FrameStrip.ActualWidth / 162)));
+            else if (e.Key == Key.PageUp || e.Key == Key.PageDown) Step((e.Key == Key.PageUp ? -1 : 1) * Math.Max(1, (int)(FrameStrip.ActualWidth / 121)));
             else if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Space && modifiers != ModifierKeys.None) { }
             else if (e.Key == Key.Left || e.Key == Key.Right) {
                 var direction = e.Key == Key.Left ? -1 : 1;
                 if (FrameMode.IsChecked == true && ExactIndexReady) {
-                    var extend = modifiers.HasFlag(ModifierKeys.Shift) && CanSelectFrames;
-                    var target = Math.Max(0, Math.Min(FrameCount - 1, (extend ? _selection.RangeEnd : _index) + direction));
-                    if (extend) { _selection.SelectRange(_selection.Anchor, target, modifiers.HasFlag(ModifierKeys.Control)); RefreshSelection(); }
-                    Pause(); _index = target; Step(0);
+                    Step(direction);
                 }
                 else if (!modifiers.HasFlag(ModifierKeys.Control)) SeekSeconds(direction * (modifiers.HasFlag(ModifierKeys.Shift) ? 5 : _secondsStep));
                 else return;
@@ -346,11 +349,24 @@ namespace Captura
         {
             var container = Ancestor<ListBoxItem>(e.OriginalSource as DependencyObject);
             if (!(container?.DataContext is FrameTile tile) || _media == null) return;
-            // 勾选框保留原生 Click；卡片正文只查看，不能顺带替换导出集合。
+            // 勾选框保留原生 Click；正文单击只预览并设置范围起点。
             if (Ancestor<CheckBox>(e.OriginalSource as DependencyObject) != null) return;
             if (_edit != null) { e.Handled = true; return; }
             e.Handled = true; FrameStrip.Focus();
-            if (CanSelectFrames && (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) != 0) { SelectTile(tile, false); RefreshSelection(); }
+            ActivateTile(tile, e.ClickCount, Keyboard.Modifiers);
+        }
+        void ActivateTile(FrameTile tile, int clickCount, ModifierKeys modifiers)
+        {
+            if (_media == null || _edit != null) return;
+            if (CanSelectFrames) {
+                if (clickCount == 1 && (modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) != 0)
+                    _selection.Click(tile.Index, modifiers.HasFlag(ModifierKeys.Control), modifiers.HasFlag(ModifierKeys.Shift));
+                else if ((modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) == 0) {
+                    if (clickCount == 2) _selection.Toggle(tile.Index);
+                    else if (clickCount == 1) _selection.SetAnchor(tile.Index);
+                }
+                RefreshSelection();
+            }
             if (ExactIndexReady) FrameMode.IsChecked = true;
             Pause(); _index = tile.Index; UpdatePosition(); _ = ShowFrameAsync();
         }
@@ -498,6 +514,7 @@ namespace Captura
         }
         void Player_Opened(object sender, RoutedEventArgs e)
         {
+            FitPreviewSurface();
             if (_gif != null || Edited) return;
             _playerReady = true;
             if (_media == null) return;
@@ -514,16 +531,23 @@ namespace Captura
         void Player_Failed(object sender, ExceptionRoutedEventArgs e) { if (_gif != null || Edited) return; Pause(); Status.Text = "系统播放器无法播放此编码；仍可使用左右键逐帧查看和导出。"; Step(0); }
         void SetBusy(bool busy) { CancelButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed; UpdateExportState(); }
         void Cancel_Click(object sender, RoutedEventArgs e) { _load?.Cancel(); _export?.Cancel(); _edit?.Cancel(); Status.Text = "已请求取消；已导出的文件会保留。"; }
-        async void ExportSelected_Click(object sender, RoutedEventArgs e) => await ExportAsync(ExportFormat.SelectedIndex == 1 ? "mp4" : ExportFormat.SelectedIndex == 2 ? "gif" : "png");
+        async void ExportSelected_Click(object sender, RoutedEventArgs e) => await ExportSelectionAsync();
+        async Task ExportSelectionAsync()
+        {
+            var kind = (ExportFormat.SelectedItem as ComboBoxItem)?.Tag as string;
+            if (kind != "png" && kind != "mp4" && kind != "gif") { Status.Text = "请选择导出格式。"; return; }
+            await ExportAsync(kind);
+        }
         void ExportFormat_Changed(object sender, SelectionChangedEventArgs e)
         {
             if (RatePanel != null) RatePanel.Visibility = ExportFormat.SelectedIndex == 0 ? Visibility.Collapsed : Visibility.Visible;
         }
         async Task ExportAsync(string kind)
         {
-            if (_media == null || _selected.Count == 0) { Status.Text = "请先勾选缩略图，或使用 Ctrl / Shift 多选需要导出的帧。"; return; }
+            if (_media == null || _selected.Count == 0) { Status.Text = "请勾选或双击需要导出的帧，也可使用 Ctrl / Shift 多选。"; return; }
             if (!CanSelectFrames) return;
-            if (!double.TryParse(ExportFps.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var fps) || fps < 1 || fps > 60 || double.IsNaN(fps)) { Status.Text = "合成帧率须为 1—60。"; return; }
+            double fps = 10;
+            if (kind != "png" && (!double.TryParse(ExportFps.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out fps) || fps < 1 || fps > 60 || double.IsNaN(fps))) { Status.Text = "合成帧率须为 1—60。"; return; }
             if (_edit != null) return;
             Pause(); var media = _media; var frames = _selected.Select(SourceAt).ToArray();
             string output;
@@ -536,17 +560,20 @@ namespace Captura
             }
             catch (Exception e) { Status.Text = "导出位置无效：" + e.Message; return; }
             var operation = new CancellationTokenSource(); _export = operation; SetBusy(true);
-            _output = output; OutputButton.Visibility = Visibility.Collapsed;
+            _output = output; _exportedMedia = null; OutputButton.Visibility = OutputFileButton.Visibility = Visibility.Collapsed;
             try
             {
                 await _service.ExportAsync(media, frames, output, kind, fps, operation.Token, new Progress<string>(s => Status.Text = s));
-                Status.Text = $"已导出 {frames.Length} 帧" + (kind == "png" ? "图片" : "并合成 " + kind.ToUpperInvariant() + "（无音频）") + "：" + output;
+                _exportedMedia = kind == "png" ? null : Path.Combine(output, "selected." + kind);
+                OutputFileButton.Visibility = _exportedMedia == null ? Visibility.Collapsed : Visibility.Visible;
+                Status.Text = $"已导出 {frames.Length} 帧" + (kind == "png" ? "图片" : "并合成 " + kind.ToUpperInvariant() + "（无音频）") + "：" + (_exportedMedia ?? output);
             }
             catch (OperationCanceledException) { Status.Text = "已取消，部分输出保留在：" + output; }
             catch (Exception e) { Status.Text = "导出失败：" + e.Message + "\n部分输出：" + output; }
             finally { _export = null; operation.Dispose(); SetBusy(false); OutputButton.Visibility = Directory.Exists(output) ? Visibility.Visible : Visibility.Collapsed; }
         }
         void Output_Click(object sender, RoutedEventArgs e) { if (Directory.Exists(_output)) ServiceProvider.LaunchFile(new ProcessStartInfo(_output)); }
+        void OutputFile_Click(object sender, RoutedEventArgs e) { if (File.Exists(_exportedMedia)) ServiceProvider.LaunchFile(new ProcessStartInfo(_exportedMedia)); }
         void OutputFolder_Click(object sender, RoutedEventArgs e)
         {
             using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "选择导出位置（自动创建独立子目录）", ShowNewFolderButton = true };

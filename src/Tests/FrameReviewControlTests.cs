@@ -17,7 +17,8 @@ using Xunit;
 namespace Captura.Tests
 {
     // 实例化产品 XAML 和控件，在 STA 线程布局及派发事件；不 Show 窗口或注入桌面输入。
-    public class FrameReviewControlTests
+    [Collection(nameof(Tests))]
+    public partial class FrameReviewControlTests
     {
         static readonly BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
         static T Field<T>(object target, string name) => (T)target.GetType().GetField(name, Private).GetValue(target);
@@ -37,6 +38,7 @@ namespace Captura.Tests
             var thread = new Thread(() => {
                 FrameReviewControl control = null;
                 try {
+                    SynchronizationContext.SetSynchronizationContext(new System.Windows.Threading.DispatcherSynchronizationContext());
                     control = new FrameReviewControl();
                     control.Resources.MergedDictionaries.Add(new ResourceDictionary {
                         Source = new Uri("/FirstFloor.ModernUI;component/Assets/ModernUI.xaml", UriKind.Relative)
@@ -191,9 +193,13 @@ namespace Captura.Tests
         }
         static void SaveRender(FrameReviewControl control, string name)
         {
+            Call(control, "Step", 0); Layout(control);
+            SaveCurrentRender(control, name);
+        }
+        static void SaveCurrentRender(FrameReviewControl control, string name)
+        {
             var directory = Environment.GetEnvironmentVariable("CAPTURA_WPF_TEST_ARTIFACTS");
             if (string.IsNullOrEmpty(directory)) return;
-            Call(control, "Step", 0); Layout(control);
             var bitmap = new RenderTargetBitmap((int)control.ActualWidth, (int)control.ActualHeight, 96, 96, PixelFormats.Pbgra32);
             bitmap.Render(control); var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
             Directory.CreateDirectory(directory);

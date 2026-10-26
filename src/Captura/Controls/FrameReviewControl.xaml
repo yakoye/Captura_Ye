@@ -76,15 +76,16 @@
  <Grid Margin="12,8">
   <Grid.RowDefinitions>
    <RowDefinition Height="*" MinHeight="160"/>
-   <RowDefinition Height="6"/><RowDefinition Height="162" MinHeight="162" MaxHeight="300"/>
+   <RowDefinition Height="6"/><RowDefinition Height="144" MinHeight="144" MaxHeight="260"/>
    <RowDefinition Height="Auto"/>
   </Grid.RowDefinitions>
 
   <Grid Grid.Row="0">
-   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="248"/></Grid.ColumnDefinitions>
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="196"/></Grid.ColumnDefinitions>
    <Grid>
     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <Border x:Name="PreviewSurface" Background="#111827" CornerRadius="8" MouseLeftButtonDown="Preview_MouseDown" MouseMove="Preview_MouseMove" MouseLeftButtonUp="Preview_MouseUp"
+    <Grid x:Name="PreviewHost" SizeChanged="PreviewHost_SizeChanged">
+    <Border x:Name="PreviewSurface" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#111827" CornerRadius="8" MouseLeftButtonDown="Preview_MouseDown" MouseMove="Preview_MouseMove" MouseLeftButtonUp="Preview_MouseUp"
             LostMouseCapture="Preview_LostCapture" PreviewMouseWheel="Preview_MouseWheel" SizeChanged="Preview_SizeChanged" Focusable="True" ClipToBounds="True">
      <Grid>
      <ScrollViewer x:Name="PreviewViewport" Margin="6" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" Focusable="False">
@@ -108,6 +109,7 @@
       </Border>
      </Grid>
     </Border>
+    </Grid>
     <StackPanel Grid.Row="1" Margin="0,8,0,0">
      <Slider x:Name="Timeline" Minimum="0" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Timeline_Changed" ToolTip="拖动定位；查看位置不会清除已选帧" Margin="0,0,0,6"/>
      <DockPanel LastChildFill="True">
@@ -149,11 +151,11 @@
      </DockPanel>
     </StackPanel>
    </Grid>
-   <Grid Grid.Column="2">
+   <Grid x:Name="ExportSidebar" Grid.Column="2">
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <StackPanel Margin="14,0,14,10">
+    <StackPanel Margin="4,0,4,8">
    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-    <Button Content="打开视频 / GIF" Click="Open_Click" FontSize="11" Padding="5,4" MinHeight="28"/>
+    <Button Content="打开媒体" Click="Open_Click" FontSize="11" Padding="5,4" MinHeight="28" ToolTip="打开视频或 GIF"/>
     <Button Content="实时画面" Click="Live_Click" FontSize="11" Padding="5,4" MinHeight="28" Margin="4,0,0,0"/>
     <Button x:Name="HelpButton" Click="Help_Click" Margin="4,0,0,0" Padding="3" MinHeight="28" Width="28" ToolTip="回看与选帧帮助" AutomationProperties.Name="回看与选帧帮助">
      <Path Style="{StaticResource TransportIcon}" Data="{StaticResource PlayerIcon-help-circle-outline}"/>
@@ -164,14 +166,14 @@
        <DockPanel Margin="0,0,0,12"><Button Content="关闭" Click="HelpClose_Click" DockPanel.Dock="Right" Padding="6,2"/><TextBlock Text="回看与选帧帮助" FontSize="16" FontWeight="SemiBold"/></DockPanel>
        <TextBlock Text="长视频先打开预览，精确索引在后台建立；完成前可播放和定位，选帧编辑及导出在索引完成后开放。帧号前的“约”表示临时估算。" TextWrapping="Wrap" Margin="0,0,0,12"/>
        <TextBlock Text="选择帧" FontWeight="SemiBold"/>
-       <TextBlock Text="单击缩略图只预览，不改变勾选。右上角勾选框独立增减导出帧，不跳转预览，也支持 Shift 连选。Ctrl 单击可显式增减离散帧；Shift 单击选择连续范围；Ctrl+Shift 单击追加范围。" TextWrapping="Wrap" Margin="0,4,0,12"/>
+       <TextBlock Text="单击缩略图预览并设置范围起点，不改变勾选。双击或右上角勾选框增减这一帧，保留其他选择；勾选框不跳转预览。Ctrl 单击离散增减；Shift 单击从起点连续选择；Ctrl+Shift 单击追加范围。滚动和左右键预览不移动起点，Shift 连选保留原起点。时间轴上的“取消选中”清空勾选并保留预览。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="播放与定位" FontWeight="SemiBold"/>
-       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。左右键沿用最近点击的 1 帧 / 1 秒 / 5 秒按钮步长；六个步进按钮支持按住连续移动。逐帧开关仍可手动切换，Shift+左右键可按 5 秒移动。拖动进度条会持续更新画面。普通左右键、播放和拖动只改变查看位置，不改勾选。逐帧时 Shift+左右键可显式扩展勾选范围，Ctrl+Shift 追加。多选后不会自动跳回第一张。" TextWrapping="Wrap" Margin="0,4,0,12"/>
+       <TextBlock Text="播放栏提供首尾、前后 1 秒 / 5 秒、逐帧和播放 / 暂停。左右键沿用最近点击的 1 帧 / 1 秒 / 5 秒按钮步长；六个步进按钮支持按住连续移动。逐帧开关仍可手动切换，按秒模式下 Shift+左右键可按 5 秒移动。拖动进度条会持续更新画面。左右键、播放和拖动只改变预览，不改变勾选或范围起点，多选后不会跳回第一张。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="预览缩放" FontWeight="SemiBold"/>
        <TextBlock Text="右下角放大、缩小或在预览区按 Ctrl＋鼠标滚轮，可在适应窗口的 0.25—8 倍间缩放。放大后按住左键拖动画面；点击“适应”重置倍率和位置。切换帧保留倍率，打开新文件恢复适应。窗口右上角可最大化／还原，也可拖动窗口边缘调整大小或双击顶部计时区域。" TextWrapping="Wrap" Margin="0,4,0,12"/>
        <TextBlock Text="快捷键与导出" FontWeight="SemiBold"/>
        <TextBlock Text="预览或时间轴内：空格播放 / 暂停；Ctrl+Enter 增减当前帧；Ctrl+A 全选；Ctrl+Shift+A 清空；Home / End 定位首尾。输入框保留原有键盘行为。" TextWrapping="Wrap" Margin="0,4,0,8"/>
-       <TextBlock Text="在右侧选择图片、视频或 GIF，然后导出所选帧。按原时间顺序导出，视频和 GIF 不含音频；完成后可打开导出目录。左上数字是帧号，橙色标记是当前查看，勾选蓝底是导出选择。" TextWrapping="Wrap"/>
+       <TextBlock Text="在右侧选择 PNG、MP4 或 GIF 后导出。PNG 每帧一张；MP4/GIF 只输出合成媒体与帧清单，不保留中间图片，且不含音频。完成后可打开导出文件或目录。左上数字是帧号，橙框表示当前预览，勾选和蓝底表示导出选择。" TextWrapping="Wrap"/>
        <TextBlock Text="帧编辑" FontWeight="SemiBold" Margin="0,12,0,4"/>
        <TextBlock Text="移除重复作用于整个时间轴，按原尺寸像素比较，100% 须完全相同，保留每组首帧。Delete 删除选中；Ctrl+Z 撤销，Ctrl+Y 重做。删除或减少帧数会缩短时长，操作和撤销后需重新选帧；原文件保留。编辑后视频预览及合成针对画面，不含音频。当前帧在可见范围内保持原位置，走到左右边缘后才滚动跟随。" TextWrapping="Wrap"/>
 
@@ -181,7 +183,7 @@
    </StackPanel>
    <TextBlock x:Name="FileLabel" Text="未打开媒体" TextTrimming="CharacterEllipsis" FontSize="12" Opacity="0.7"/>
     </StackPanel>
-    <Border Grid.Row="1" Background="#0D64748B" BorderBrush="#2864748B" BorderThickness="1" CornerRadius="8" Padding="14">
+    <Border Grid.Row="1" Background="#0D64748B" BorderBrush="#2864748B" BorderThickness="1" CornerRadius="8" Padding="10">
     <DockPanel LastChildFill="True">
      <StackPanel DockPanel.Dock="Top">
 
@@ -189,7 +191,7 @@
       <DockPanel Margin="0,8,0,0">
        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
         <Button x:Name="AllButton" Content="全选" Click="All_Click" Padding="6,2" MinHeight="24" FontSize="11"/>
-        <Button x:Name="ClearButton" Content="清空" Click="Clear_Click" Padding="6,2" MinHeight="24" FontSize="11" Margin="4,0,0,0"/>
+        <Button x:Name="ClearButton" Content="清空" Click="Clear_Click" Padding="6,2" MinHeight="24" FontSize="11" Margin="4,0,0,0" ToolTip="取消全部选中，不改变预览位置"/>
        </WrapPanel>
        <TextBlock x:Name="SelectionLabel" Text="已选 0 帧" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
       </DockPanel>
@@ -197,20 +199,20 @@
      </StackPanel>
      <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
       <Button x:Name="ExportButton" Content="导出" Click="ExportSelected_Click" Background="#2563EB" Foreground="White" BorderBrush="#2563EB" FontWeight="SemiBold" MinHeight="36" Margin="0,4,0,0" IsEnabled="False"/>
+      <Button x:Name="OutputFileButton" Content="打开导出文件" Click="OutputFile_Click" Visibility="Collapsed" Margin="0,4,0,0"/>
       <Button x:Name="OutputButton" Content="打开导出目录" Click="Output_Click" Visibility="Collapsed" Margin="0,4,0,0"/>
      </StackPanel>
      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
       <StackPanel>
       <TextBlock Text="导出格式" FontSize="12" Margin="0,0,0,5"/>
       <ComboBox x:Name="ExportFormat" SelectedIndex="0" MinHeight="30" SelectionChanged="ExportFormat_Changed">
-       <ComboBoxItem Content="图片 · 每帧一张 PNG"/><ComboBoxItem Content="视频 · 合成为 MP4"/><ComboBoxItem Content="动图 · 合成为 GIF"/>
+       <ComboBoxItem Content="图片 · PNG" Tag="png"/><ComboBoxItem Content="视频 · MP4" Tag="mp4"/><ComboBoxItem Content="动图 · GIF" Tag="gif"/>
       </ComboBox>
       <StackPanel x:Name="RatePanel" Margin="0,10,0,0" Visibility="Collapsed">
        <DockPanel><TextBlock Text="合成帧率" VerticalAlignment="Center"/>
-        <TextBox x:Name="ExportFps" Text="10" Width="88" MinHeight="28" HorizontalContentAlignment="Right" Margin="8,0" ToolTip="1—60 帧/秒，允许小数"/>
+        <TextBox x:Name="ExportFps" Text="10" Width="54" MinHeight="28" HorizontalContentAlignment="Right" Margin="6,0" ToolTip="1—60 帧/秒，允许小数；按时间顺序合成，不含音频"/>
         <TextBlock Text="帧/秒" VerticalAlignment="Center"/>
        </DockPanel>
-       <TextBlock Text="按时间顺序合成所选帧，不含音频" FontSize="11" TextWrapping="Wrap" Opacity="0.7" Margin="0,6,0,0"/>
       </StackPanel>
       <DockPanel Margin="0,10,0,5">
        <Button DockPanel.Dock="Right" Content="更改…" Click="OutputFolder_Click" Padding="6,1" MinHeight="24"/>
@@ -237,6 +239,7 @@
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
    <DockPanel Margin="0,0,0,6">
     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+     <Button x:Name="ClearTimelineButton" Content="取消选中" Click="Clear_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False" ToolTip="取消全部选中，保留预览位置"/>
      <Button x:Name="DeleteFramesButton" Content="删除选中" Click="DeleteFrames_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False" ToolTip="删除所选帧（Delete），至少保留一帧；可撤销"/>
      <Button x:Name="ReduceFramesButton" Content="减少帧数" Click="ReduceFrames_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False"/>
      <Button x:Name="UndoEditButton" Content="撤销" Click="UndoEdit_Click" Style="{StaticResource FrameEditButton}" IsEnabled="False" ToolTip="撤销帧编辑（Ctrl+Z）"/>
@@ -274,7 +277,7 @@
     <ListBox.ItemContainerStyle>
      <Style TargetType="ListBoxItem">
       <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=OneWay}"/>
-      <Setter Property="Width" Value="156"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0,0,6,0"/>
+      <Setter Property="Width" Value="117"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0,0,4,0"/>
       <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Top"/>
       <Setter Property="IsTabStop" Value="False"/>
       <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/></ControlTemplate></Setter.Value></Setter>
@@ -282,9 +285,9 @@
     </ListBox.ItemContainerStyle>
     <ListBox.ItemTemplate>
      <DataTemplate>
-      <Border x:Name="TileBorder" BorderThickness="2" CornerRadius="6" Padding="5" BorderBrush="#2864748B" Background="{DynamicResource WindowBackground}" ToolTip="{Binding Label}">
+      <Border x:Name="TileBorder" BorderThickness="2" CornerRadius="5" Padding="4" BorderBrush="#2864748B" Background="{DynamicResource WindowBackground}" ToolTip="{Binding Label}">
        <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="76"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="57"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <Border Background="#111827" CornerRadius="3"><Grid>
          <TextBlock Text="{Binding ThumbnailHint}" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
          <Image Source="{Binding Thumbnail}" Stretch="Uniform"/>
@@ -304,7 +307,7 @@
       </Border>
       <DataTemplate.Triggers>
        <DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter TargetName="TileBorder" Property="Background" Value="#243B82F6"/><Setter TargetName="TileBorder" Property="BorderBrush" Value="#3B82F6"/></DataTrigger>
-       <DataTrigger Binding="{Binding IsCurrent}" Value="True"><Setter TargetName="CurrentBadge" Property="Visibility" Value="Visible"/></DataTrigger>
+       <DataTrigger Binding="{Binding IsCurrent}" Value="True"><Setter TargetName="CurrentBadge" Property="Visibility" Value="Visible"/><Setter TargetName="TileBorder" Property="BorderBrush" Value="#F59E0B"/></DataTrigger>
       </DataTemplate.Triggers>
      </DataTemplate>
     </ListBox.ItemTemplate>

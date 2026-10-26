@@ -13,7 +13,7 @@ namespace Captura
         public static MainWindow Instance { get; private set; }
 
         readonly MainWindowHelper _helper;
-        double _expandedWidth = 1120, _expandedHeight = 850;
+        readonly ReviewWindowLayout _windowLayout = new ReviewWindowLayout();
         bool _expandedLayout;
 
         public MainWindow()
@@ -92,20 +92,8 @@ namespace Captura
         void ApplyLayout(bool expanded)
         {
             var area = SystemParameters.WorkArea;
-            if (expanded) {
-                ResizeMode = ResizeMode.CanResize;
-                MinWidth = System.Math.Min(900, area.Width - 20);
-                MinHeight = System.Math.Min(720, area.Height - 20);
-                Width = System.Math.Min(_expandedWidth, area.Width - 20);
-                Height = System.Math.Min(_expandedHeight, area.Height - 20);
-            }
-            else {
-                Review.Suspend();
-                if (_expandedLayout && WindowState == WindowState.Normal) { _expandedWidth = ActualWidth; _expandedHeight = ActualHeight; }
-                if (WindowState == WindowState.Maximized) WindowState = WindowState.Normal;
-                MinWidth = 440; MinHeight = 86; Width = 440; Height = 90;
-                ResizeMode = ResizeMode.CanMinimize;
-            }
+            if (!expanded) Review.Suspend();
+            _windowLayout.Apply(this, expanded, new System.Windows.Size(area.Width, area.Height));
             _expandedLayout = expanded;
             MaximizeWindowButton.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
             UpdateMaximizeButton();

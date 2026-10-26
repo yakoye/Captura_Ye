@@ -27,7 +27,7 @@ namespace Captura.ViewModels
 
         public void SetDefaultSource()
         {
-            SelectedVideoSourceKind = _fullScreenProvider;
+            RestoreSourceKind(_fullScreenProvider);
         }
 
         void ChangeSource(IVideoSourceProvider NewSourceProvider, bool CallOnSelect)
@@ -49,6 +49,7 @@ namespace Captura.ViewModels
                 _videoSourceKind?.OnUnselect();
 
                 _videoSourceKind = NewSourceProvider;
+                if (CallOnSelect) _settings.UI.Expanded = false;
             }
             finally
             {
@@ -68,6 +69,11 @@ namespace Captura.ViewModels
         public void RestoreSourceKind(IVideoSourceProvider SourceProvider)
         {
             ChangeSource(SourceProvider, false);
+        }
+
+        public void ReselectSource()
+        {
+            if (_videoSourceKind != null && _videoSourceKind.OnSelect()) _settings.UI.Expanded = false;
         }
     }
 }

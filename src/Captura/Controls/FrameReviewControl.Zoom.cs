@@ -13,6 +13,22 @@ namespace Captura
         Point _panStart;
         double _panHorizontal, _panVertical;
 
+        void FitPreviewSurface()
+        {
+            if (PreviewHost == null || PreviewSurface == null) return;
+            var width = Math.Max(1, PreviewHost.ActualWidth);
+            var height = Math.Max(1, PreviewHost.ActualHeight);
+            var bitmap = Still.Source as System.Windows.Media.Imaging.BitmapSource;
+            var sourceWidth = bitmap?.PixelWidth ?? Player.NaturalVideoWidth;
+            var sourceHeight = bitmap?.PixelHeight ?? Player.NaturalVideoHeight;
+            if (_media != null && sourceWidth > 0 && sourceHeight > 0) {
+                var scale = Math.Min(Math.Max(1, width - 12) / sourceWidth, Math.Max(1, height - 12) / sourceHeight);
+                width = sourceWidth * scale + 12; height = sourceHeight * scale + 12;
+            }
+            PreviewSurface.Width = width; PreviewSurface.Height = height;
+        }
+        void PreviewHost_SizeChanged(object sender, SizeChangedEventArgs e) => FitPreviewSurface();
+
         void UpdateZoomState()
         {
             if (ZoomInButton == null) return;

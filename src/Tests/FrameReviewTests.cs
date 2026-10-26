@@ -251,7 +251,7 @@ namespace Captura.Tests
                 var fallbackMedia = await new FrameReviewService(executable, false).OpenAsync(file, CancellationToken.None);
                 Assert.Equal(media.Times, fallbackMedia.Times);
                 var output = Path.Combine(root, "选帧导出");
-                await service.ExportAsync(media, frames.Reverse().Concat(frames), output, format, 5, CancellationToken.None);
+                await service.ExportAsync(media, frames.Reverse().Concat(frames), output, "png", 5, CancellationToken.None);
                 Assert.Equal(3, Directory.GetFiles(output, "frame-*.png").Length);
                 for (var i = 0; i < frames.Length; i++)
                 {
@@ -272,7 +272,11 @@ namespace Captura.Tests
                     }
                 }
                 Assert.Contains(kind == "vfr" ? "frame-000002.png,2,0.1" : "frame-000002.png,5,0.4", File.ReadAllText(Path.Combine(output, "frames.csv")));
-                var result = await service.OpenAsync(Path.Combine(output, "selected." + format), CancellationToken.None);
+                var composition = Path.Combine(root, "合成导出");
+                await service.ExportAsync(media, frames.Reverse().Concat(frames), composition, format, 5, CancellationToken.None);
+                Assert.Empty(Directory.GetFiles(composition, "*.png", SearchOption.AllDirectories));
+                Assert.Equal(2, Directory.GetFiles(composition).Length);
+                var result = await service.OpenAsync(Path.Combine(composition, "selected." + format), CancellationToken.None);
                 Assert.Equal(3, result.Times.Length);
                 Assert.InRange(result.Duration, 0.59, 0.61);
                 await Assert.ThrowsAsync<IOException>(() => service.ExportAsync(media, frames, output, "png", 10, CancellationToken.None));

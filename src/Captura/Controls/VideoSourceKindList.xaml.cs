@@ -17,7 +17,7 @@ namespace Captura
             {
                 if (item.DataContext is IVideoSourceProvider provider)
                 {
-                    provider.OnSelect();
+                    ServiceProvider.Get<Captura.ViewModels.VideoSourcesViewModel>().ReselectSource();
                 }
             }
         }

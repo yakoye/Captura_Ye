@@ -162,6 +162,10 @@ namespace Captura.FFmpeg
             if (fps < 1 || fps > 60 || double.IsNaN(fps)) throw new ArgumentOutOfRangeException(nameof(fps));
             if (Directory.Exists(directory) || File.Exists(directory)) throw new IOException("导出目录已存在，请选择新目录。");
             Directory.CreateDirectory(directory);
+            // 合成用图片放在独立临时目录，用户的输出目录只保留所选格式及帧清单。
+            var framesDirectory = kind == "png" ? directory : Path.Combine(Path.GetTempPath(), "Captura-export-" + Guid.NewGuid().ToString("N"));
+            if (kind != "png") Directory.CreateDirectory(framesDirectory);
+            try {
             var help = await RunAsync(_ffmpeg, "-hide_banner -h full", token);
             var syncOption = help.Contains("-fps_mode") ? " -fps_mode passthrough" : " -vsync 0";
             // 一次顺序解码批量抽帧，按批限制命令长度，避免数十帧时重复解码整个视频。
@@ -175,21 +179,26 @@ namespace Captura.FFmpeg
                     terms.Add(first == batch[i] ? "eq(n\\," + first + ")" : "between(n\\," + first + "\\," + batch[i] + ")");
                 }
                 var expression = string.Join("+", terms);
-                progress?.Report($"正在导出图片：{offset + 1}—{offset + batch.Length} / {frames.Length}");
-                await RunAsync(_ffmpeg, "-v error -nostdin -n -i " + Quote(media.FilePath) + " -map 0:v:0 -an -vf \"select=" + expression + "\"" + syncOption + " -frames:v " + batch.Length + " -start_number " + (offset + 1) + " " + Quote(Path.Combine(directory, "frame-%06d.png")), token);
+                progress?.Report((kind == "png" ? "正在导出图片：" : "正在准备 " + kind.ToUpperInvariant() + " 帧：") + $"{offset + 1}—{offset + batch.Length} / {frames.Length}");
+                await RunAsync(_ffmpeg, "-v error -nostdin -n -i " + Quote(media.FilePath) + " -map 0:v:0 -an -vf \"select=" + expression + "\"" + syncOption + " -frames:v " + batch.Length + " -start_number " + (offset + 1) + " " + Quote(Path.Combine(framesDirectory, "frame-%06d.png")), token);
             }
-            var manifest = new StringBuilder("图片,原始帧号,时间秒\r\n");
+            var manifest = new StringBuilder(kind == "png" ? "图片,原始帧号,时间秒\r\n" : "输出帧序号,原始帧号,时间秒\r\n");
             for (var i = 0; i < frames.Length; i++)
-                manifest.AppendFormat(Invariant, "frame-{0:000000}.png,{1},{2:0.######}\r\n", i + 1, frames[i] + 1, media.Times[frames[i]]);
+                manifest.AppendFormat(Invariant, kind == "png" ? "frame-{0:000000}.png,{1},{2:0.######}\r\n" : "{0},{1},{2:0.######}\r\n", i + 1, frames[i] + 1, media.Times[frames[i]]);
             File.WriteAllText(Path.Combine(directory, "frames.csv"), manifest.ToString(), new UTF8Encoding(true));
-            if (Directory.GetFiles(directory, "frame-*.png").Length != frames.Length) throw new IOException("抽帧数量与选择数量不一致，已保留输出供检查。");
+            if (Directory.GetFiles(framesDirectory, "frame-*.png").Length != frames.Length) throw new IOException("抽帧数量与选择数量不一致，未完成导出。");
             if (kind == "png") return;
-            progress?.Report("图片已导出，正在合成" + (kind == "gif" ? " GIF……" : "视频……"));
-            var input = "-v error -nostdin -n -framerate " + fps.ToString(Invariant) + " -i " + Quote(Path.Combine(directory, "frame-%06d.png"));
+            progress?.Report("正在合成 " + kind.ToUpperInvariant() + "……");
+            var input = "-v error -nostdin -n -framerate " + fps.ToString(Invariant) + " -i " + Quote(Path.Combine(framesDirectory, "frame-%06d.png"));
             var options = kind == "mp4"
                 ? " -an -vf \"pad=ceil(iw/2)*2:ceil(ih/2)*2\" -c:v libx264 -pix_fmt yuv420p -movflags +faststart "
                 : " -filter_complex \"split[a][b];[a]palettegen[p];[b][p]paletteuse\" -loop 0 ";
             await RunAsync(_ffmpeg, input + options + Quote(Path.Combine(directory, "selected." + kind)), token);
+            if (new FileInfo(Path.Combine(directory, "selected." + kind)).Length == 0) throw new IOException("合成文件为空，导出未完成。");
+            }
+            finally {
+                if (kind != "png" && Directory.Exists(framesDirectory)) Directory.Delete(framesDirectory, true);
+            }
         }
 
         public static string Quote(string value)

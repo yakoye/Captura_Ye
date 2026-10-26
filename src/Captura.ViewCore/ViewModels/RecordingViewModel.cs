@@ -329,6 +329,8 @@ namespace Captura.ViewModels
         void StartRecording()
         {
             _systemTray.HideNotification();
+            // 所有录制入口（按钮、快捷键和托盘）都在采集第一帧之前收起主窗口。
+            Settings.UI.Expanded = false;
 
             if (_recordingModel.StartRecording(new RecordingModelParams
             {
