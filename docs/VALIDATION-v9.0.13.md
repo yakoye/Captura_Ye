@@ -32,4 +32,14 @@
 
 本轮其他会话正在进行前台输入回归，已撤回桌面时段请求，未启动或操控可见窗口。最终布局以真实 WPF 离屏渲染复核，未宣称完成真实 Shift/Ctrl 点击、双击输入、多 DPI、最大化状态切换和所有视频硬件呈现的桌面验收。
 
-发布继续调用 `scripts/release.ps1 -ReusePackage -Publish -Archive`，回下载校验及双归档结果完成后补记。
+发布调用 `scripts/release.ps1 -ReusePackage -Publish -Archive`，完整日志 `publish-v913-pipeline.log`、详细证据 `temp/logs/20261026-153307`，退出代码 0。源码提交 `a38010e3` 及标签 `v9.0.13` 已推送；[GitHub v9.0.13](https://github.com/yakoye/Captura_Ye/releases/tag/v9.0.13) 现场确认 `isDraft: false`，5 个资产全部 uploaded。回下载全部资产后，大小与 SHA-256 均匹配。
+
+以下两处各 5 个文件完成归档及 SHA-256 核验，旧版本保留：
+
+- `C:\Users\color\Downloads\yakoye-release\Captura_Ye\v9.0.13`
+- `\\192.168.7.100\Downloads\yakoye-release\Captura_Ye\v9.0.13`
+
+| 资产 | 字节 | SHA-256 |
+| --- | ---: | --- |
+| CapturaYe-v9.0.13-Setup.exe | 4683350 | `13f2e2f58ee301dbb21e95d0c5af735e9751fef2f8327ceec0079768e284fe2f` |
+| CapturaYe-v9.0.13-Portable.zip | 3719106 | `500a39fa18546b3b5273baa6c0a682c665345f9cb1a757ec5b811128ae555d5b` |
